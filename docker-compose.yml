@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  thalric-dashboard:
+    build: .
+    container_name: thalric-dashboard
+    ports:
+      - "5000:5000"
+    volumes:
+      # Monter le fichier JSON pour la persistance des données
+      - ./thalric_data.json:/app/thalric_data.json
+      # Optionnel : monter les logs
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Service optionnel pour backup automatique
+  backup:
+    image: alpine:latest
+    container_name: thalric-backup
+    volumes:
+      - ./thalric_data.json:/data/thalric_data.json:ro
+      - ./backups:/backups
+    environment:
+      - TZ=Europe/Paris
+    command: >
+      sh -c "
+        apk add --no-cache dcron
+        echo '0 */6 * * * cp /data/thalric_data.json /backups/thalric_data_$$(date +%Y%m%d_%H%M%S).json && find /backups -name \"thalric_data_*.json\" -mtime +7 -delete' | crontab -
+        crond -f
+      "
+    restart: unless-stopped

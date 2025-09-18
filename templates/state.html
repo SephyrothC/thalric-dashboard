@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - {{ character.character_info.name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <!-- Caractéristiques principales -->
+    <div class="stat-card">
+        <h2 class="card-title">Caractéristiques</h2>
+        <div class="card-content">
+            <div class="ability-scores">
+                <div class="ability-score">
+                    <div class="ability-name">Force</div>
+                    <div class="ability-value">{{ character.stats.strength }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.strength - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.strength - 10) // 2 }}</div>
+                </div>
+                <div class="ability-score">
+                    <div class="ability-name">Dextérité</div>
+                    <div class="ability-value">{{ character.stats.dexterity }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.dexterity - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.dexterity - 10) // 2 }}</div>
+                </div>
+                <div class="ability-score">
+                    <div class="ability-name">Constitution</div>
+                    <div class="ability-value">{{ character.stats.constitution }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.constitution - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.constitution - 10) // 2 }}</div>
+                </div>
+                <div class="ability-score">
+                    <div class="ability-name">Intelligence</div>
+                    <div class="ability-value">{{ character.stats.intelligence }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.intelligence - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.intelligence - 10) // 2 }}</div>
+                </div>
+                <div class="ability-score">
+                    <div class="ability-name">Sagesse</div>
+                    <div class="ability-value">{{ character.stats.wisdom }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.wisdom - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.wisdom - 10) // 2 }}</div>
+                </div>
+                <div class="ability-score">
+                    <div class="ability-name">Charisme</div>
+                    <div class="ability-value">{{ character.stats.charisma }}</div>
+                    <div class="ability-modifier">{{ "+" if (character.stats.charisma - 10) // 2 >= 0 else "" }}{{
+                        (character.stats.charisma - 10) // 2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jets de sauvegarde -->
+    <div class="stat-card">
+        <h2 class="card-title">Jets de Sauvegarde</h2>
+        <div class="card-content">
+            <div class="skills-list">
+                <div class="skill-item" onclick="rollSavingThrow('strength')">
+                    <span class="skill-name">Force</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.strength >= 0 else "" }}{{
+                        character.saving_throws.strength }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSavingThrow('dexterity')">
+                    <span class="skill-name">Dextérité</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.dexterity >= 0 else "" }}{{
+                        character.saving_throws.dexterity }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSavingThrow('constitution')">
+                    <span class="skill-name">Constitution</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.constitution >= 0 else "" }}{{
+                        character.saving_throws.constitution }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSavingThrow('intelligence')">
+                    <span class="skill-name">Intelligence</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.intelligence >= 0 else "" }}{{
+                        character.saving_throws.intelligence }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSavingThrow('wisdom')">
+                    <span class="skill-name">Sagesse</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.wisdom >= 0 else "" }}{{
+                        character.saving_throws.wisdom }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSavingThrow('charisma')">
+                    <span class="skill-name">Charisme</span>
+                    <span class="skill-bonus">{{ "+" if character.saving_throws.charisma >= 0 else "" }}{{
+                        character.saving_throws.charisma }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compétences -->
+    <div class="stat-card">
+        <h2 class="card-title">Compétences</h2>
+        <div class="card-content">
+            <div class="skills-list">
+                <div class="skill-item" onclick="rollSkillCheck('athletics', 'Athlétisme')">
+                    <span class="skill-name">Athlétisme</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.athletics >= 0 else "" }}{{
+                        character.skills.athletics }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSkillCheck('insight', 'Perspicacité')">
+                    <span class="skill-name">Perspicacité</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.insight >= 0 else "" }}{{
+                        character.skills.insight }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSkillCheck('intimidation', 'Intimidation')">
+                    <span class="skill-name">Intimidation</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.intimidation >= 0 else "" }}{{
+                        character.skills.intimidation }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSkillCheck('perception', 'Perception')">
+                    <span class="skill-name">Perception</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.perception >= 0 else "" }}{{
+                        character.skills.perception }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSkillCheck('persuasion', 'Persuasion')">
+                    <span class="skill-name">Persuasion</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.persuasion >= 0 else "" }}{{
+                        character.skills.persuasion }}</span>
+                </div>
+                <div class="skill-item" onclick="rollSkillCheck('religion', 'Religion')">
+                    <span class="skill-name">Religion</span>
+                    <span class="skill-bonus">{{ "+" if character.skills.religion >= 0 else "" }}{{
+                        character.skills.religion }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gestion des HP -->
+    <div class="stat-card">
+        <h2 class="card-title">Points de Vie</h2>
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; margin: 15px 0;">
+                    <span id="hp-current-card" style="color: var(--success-green); font-weight: bold;">{{
+                        character.stats.hp_current }}</span>
+                    <span style="color: var(--text-muted);">/</span>
+                    <span style="color: var(--text-light);">{{ character.stats.hp_max }}</span>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    {% set hp_percent = (character.stats.hp_current / character.stats.hp_max * 100) | int %}
+                    <div
+                        style="background: var(--dark-bg); border-radius: 10px; height: 15px; position: relative; border: 1px solid var(--border-color);">
+                        <div id="hp-progress-bar" style="background: linear-gradient(90deg, 
+                            {% if hp_percent > 60 %}var(--success-green){% elif hp_percent > 30 %}var(--warning-orange){% else %}var(--danger-red){% endif %} 0%, 
+                            {% if hp_percent > 60 %}#66bb6a{% elif hp_percent > 30 %}#ffb74d{% else %}#ef5350{% endif %} 100%); 
+                            width: {{ hp_percent }}%; height: 100%; border-radius: 9px; transition: all 0.3s ease;">
+                        </div>
+                    </div>
+                    <div id="hp-percent-text" style="margin-top: 5px; color: var(--text-muted); font-size: 0.8rem;">{{
+                        hp_percent }}%</div>
+                </div>
+            </div>
+
+            <div class="hp-controls">
+                <input type="number" class="hp-input" id="hp-change-input" placeholder="±HP" style="width: 70px;">
+                <button class="btn btn-small btn-info" onclick="modifyHPFromInput()">OK</button>
+            </div>
+
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn btn-success"
+                    onclick="modifyHP({{ character.stats.hp_max - character.stats.hp_current }})" style="width: 100%;">
+                    Soins Complets
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations diverses -->
+    <div class="stat-card">
+        <h2 class="card-title">Informations</h2>
+        <div class="card-content">
+            <div style="display: grid; gap: 10px;">
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Classe d'Armure</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.stats.ac }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Vitesse</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.stats.speed }}
+                        pieds</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Perception Passive</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.stats.passive_perception
+                        }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Bonus de Maîtrise</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">+{{ character.stats.proficiency_bonus
+                        }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">DD des sorts</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.spellcasting.spell_save_dc
+                        }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Bonus attaque sorts</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">+{{
+                        character.spellcasting.spell_attack_bonus }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repos -->
+    <div class="stat-card">
+        <h2 class="card-title">Repos</h2>
+        <div class="card-content">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button class="btn btn-info" onclick="shortRest()" style="padding: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Repos Court</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">Récupère Channel Divinity</div>
+                </button>
+                <button class="btn btn-success" onclick="longRest()" style="padding: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Repos Long</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">Récupère tout</div>
+                </button>
+            </div>
+
+            <div
+                style="margin-top: 15px; padding: 10px; background: var(--dark-bg); border-radius: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                <div><strong>Repos Court:</strong> Récupère Channel Divinity</div>
+                <div><strong>Repos Long:</strong> Récupère HP, sorts, capacités</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

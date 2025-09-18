@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Sorts - {{ character.character_info.name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <!-- Emplacements de sorts -->
+    <div class="stat-card">
+        <h2 class="card-title">Emplacements de Sorts</h2>
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="color: var(--secondary-gold); font-size: 1.1rem; margin-bottom: 10px;">
+                    Capacité de sorts: <strong>Charisme</strong> |
+                    DD: <strong>{{ character.spellcasting.spell_save_dc }}</strong> |
+                    Bonus: <strong>+{{ character.spellcasting.spell_attack_bonus }}</strong>
+                </div>
+            </div>
+
+            <!-- Niveau 1 -->
+            <div
+                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-gold);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: var(--primary-gold); margin: 0;">Niveau 1</h3>
+                    <div style="font-size: 1.2rem;">
+                        <span id="spell-slots-1" style="color: var(--primary-gold); font-weight: bold;">{{
+                            character.spellcasting.spell_slots_current['1'] }}</span>
+                        <span style="color: var(--text-muted);">/</span>
+                        <span style="color: var(--text-light);">{{ character.spellcasting.spell_slots['1'] }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    {% for i in range(character.spellcasting.spell_slots['1']) %}
+                    <div class="spell-slot" data-level="1" data-slot="{{ i + 1 }}"
+                        style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--primary-gold); 
+                             {% if i < character.spellcasting.spell_slots_current['1'] %}background: var(--primary-gold);{% else %}background: transparent;{% endif %}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Niveau 2 -->
+            <div
+                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--info-blue);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: var(--info-blue); margin: 0;">Niveau 2</h3>
+                    <div style="font-size: 1.2rem;">
+                        <span id="spell-slots-2" style="color: var(--info-blue); font-weight: bold;">{{
+                            character.spellcasting.spell_slots_current['2'] }}</span>
+                        <span style="color: var(--text-muted);">/</span>
+                        <span style="color: var(--text-light);">{{ character.spellcasting.spell_slots['2'] }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    {% for i in range(character.spellcasting.spell_slots['2']) %}
+                    <div class="spell-slot" data-level="2" data-slot="{{ i + 1 }}"
+                        style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--info-blue); 
+                             {% if i < character.spellcasting.spell_slots_current['2'] %}background: var(--info-blue);{% else %}background: transparent;{% endif %}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Niveau 3 -->
+            <div
+                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--warning-orange);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: var(--warning-orange); margin: 0;">Niveau 3</h3>
+                    <div style="font-size: 1.2rem;">
+                        <span id="spell-slots-3" style="color: var(--warning-orange); font-weight: bold;">{{
+                            character.spellcasting.spell_slots_current['3'] }}</span>
+                        <span style="color: var(--text-muted);">/</span>
+                        <span style="color: var(--text-light);">{{ character.spellcasting.spell_slots['3'] }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    {% for i in range(character.spellcasting.spell_slots['3']) %}
+                    <div class="spell-slot" data-level="3" data-slot="{{ i + 1 }}"
+                        style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--warning-orange); 
+                             {% if i < character.spellcasting.spell_slots_current['3'] %}background: var(--warning-orange);{% else %}background: transparent;{% endif %}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Contrôles niveau de sort -->
+            <div style="margin-top: 20px; text-align: center;">
+                <label style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span style="color: var(--text-light);">Lancer au niveau:</span>
+                    <select id="spell-level-select"
+                        style="background: var(--medium-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 8px; border-radius: 4px; font-size: 1rem;">
+                        <option value="1">Niveau 1</option>
+                        <option value="2">Niveau 2</option>
+                        <option value="3">Niveau 3</option>
+                    </select>
+                </label>
+                <div
+                    style="margin-top: 10px; padding: 10px; background: var(--medium-bg); border-radius: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                    ⚠️ <strong>Règle importante :</strong> Un sort consomme un emplacement de son niveau minimum ou
+                    supérieur.<br>
+                    Exemple : Lesser Restoration (niv 2) consomme minimum un slot niv 2, même si vous sélectionnez niv
+                    1.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cantrips -->
+    <div class="stat-card">
+        <h2 class="card-title">Cantrips</h2>
+        <div class="card-content">
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                <h3 style="color: var(--secondary-gold); margin-bottom: 10px;">
+                    {{ character.spells.cantrips.light.name }}
+                </h3>
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    <strong>École:</strong> {{ character.spells.cantrips.light.school | title }}<br>
+                    <strong>Temps:</strong> {{ character.spells.cantrips.light.casting_time }}<br>
+                    <strong>Portée:</strong> {{ character.spells.cantrips.light.range }}<br>
+                    <strong>Durée:</strong> {{ character.spells.cantrips.light.duration }}
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">
+                    {{ character.spells.cantrips.light.description }}
+                </p>
+                <button class="btn btn-info" onclick="castCantrip('light')" style="width: 100%;">
+                    ✨ Lancer Light
+                </button>
+                <div style="margin-top: 8px; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                    Cantrip - Utilisable à volonté
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorts Niveau 1 -->
+    <div class="stat-card">
+        <h2 class="card-title">Sorts de Niveau 1</h2>
+        <div class="card-content">
+            <!-- Protection from Evil and Good -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_1.protection_from_evil_and_good.name }}
+                    {% if character.spells.level_1.protection_from_evil_and_good.get('always_prepared') %}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                    {% endif %}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_1.protection_from_evil_and_good.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('protection_from_evil_and_good', false)"
+                    style="width: 100%;">
+                    🛡️ Lancer
+                </button>
+            </div>
+
+            <!-- Sanctuary -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.spells.level_1.sanctuary.name }}
+                    {% if character.spells.level_1.sanctuary.get('always_prepared') %}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                    {% endif %}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_1.sanctuary.description }}
+                </p>
+                <button class="btn btn-small btn-info" onclick="castSpell('sanctuary', false)" style="width: 100%;">
+                    🏛️ Lancer
+                </button>
+            </div>
+
+            <!-- Shield of Faith -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_1.shield_of_faith.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_1.shield_of_faith.description }}
+                </p>
+                <button class="btn btn-small" onclick="castSpell('shield_of_faith', false)" style="width: 100%;">
+                    ✨ Lancer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorts Niveau 2 -->
+    <div class="stat-card">
+        <h2 class="card-title">Sorts de Niveau 2</h2>
+        <div class="card-content">
+            <!-- Lesser Restoration -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_2.lesser_restoration.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_2.lesser_restoration.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('lesser_restoration', false)"
+                    style="width: 100%;">
+                    🔄 Lancer
+                </button>
+            </div>
+
+            <!-- Zone of Truth -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-orange);">
+                <h4 style="color: var(--warning-orange); margin-bottom: 5px;">
+                    {{ character.spells.level_2.zone_of_truth.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_2.zone_of_truth.description }}
+                </p>
+                <button class="btn btn-small btn-warning" onclick="castSpell('zone_of_truth', false)"
+                    style="width: 100%;">
+                    🔍 Lancer
+                </button>
+            </div>
+
+            <!-- Aid -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.spells.level_2.aid.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_2.aid.description }}
+                </p>
+                <button class="btn btn-small btn-info" onclick="castSpell('aid', false)" style="width: 100%;">
+                    💪 Lancer
+                </button>
+            </div>
+
+            <!-- Find Steed -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_2.find_steed.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_2.find_steed.description }}
+                </p>
+                <button class="btn btn-small" onclick="castSpell('find_steed', false)" style="width: 100%;">
+                    🐎 Lancer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorts Niveau 3 -->
+    <div class="stat-card">
+        <h2 class="card-title">Sorts de Niveau 3</h2>
+        <div class="card-content">
+            <!-- Dispel Magic -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--danger-red);">
+                <h4 style="color: var(--danger-red); margin-bottom: 5px;">
+                    {{ character.spells.level_3.dispel_magic.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.dispel_magic.description }}
+                </p>
+                <button class="btn btn-small btn-danger" onclick="castSpell('dispel_magic', false)"
+                    style="width: 100%;">
+                    🚫 Lancer
+                </button>
+            </div>
+
+            <!-- Remove Curse -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_3.remove_curse.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.remove_curse.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('remove_curse', false)"
+                    style="width: 100%;">
+                    ✂️ Lancer
+                </button>
+            </div>
+
+            <!-- Revivify -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_3.revivify.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.revivify.description }}
+                </p>
+                <div style="font-size: 0.7rem; color: var(--danger-red); margin-bottom: 8px;">
+                    ⚠️ Coûte 300 po de diamants
+                </div>
+                <button class="btn btn-small" onclick="castSpell('revivify', false)" style="width: 100%;">
+                    💎 Lancer
+                </button>
+            </div>
+
+            <!-- Beacon of Hope -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.spells.level_3.beacon_of_hope.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.beacon_of_hope.description }}
+                </p>
+                <button class="btn btn-small btn-info" onclick="castSpell('beacon_of_hope', false)"
+                    style="width: 100%;">
+                    🏮 Lancer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fonction pour lancer un cantrip
+    function castCantrip(cantripName) {
+        showDiceResult(`
+        <h3>Cantrip - Light</h3>
+        <div class="dice-roll" style="color: var(--primary-gold);">
+            ✨ Lumière créée!
+        </div>
+        <div>Objet touché émet une lumière vive (20 pieds) pendant 1 heure</div>
+        <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+            Les cantrips n'utilisent pas d'emplacements de sorts
+        </div>
+    `);
+    }
+
+    // Fonction pour mettre à jour l'affichage visuel des slots
+    function updateSpellSlotsVisual(level, remaining) {
+        const slots = document.querySelectorAll(`[data-level="${level}"]`);
+        slots.forEach((slot, index) => {
+            if (index < remaining) {
+                // Slot disponible
+                slot.style.background = getSlotColor(level);
+            } else {
+                // Slot utilisé
+                slot.style.background = 'transparent';
+            }
+        });
+    }
+
+    // Obtenir la couleur selon le niveau
+    function getSlotColor(level) {
+        switch (level) {
+            case 1: return 'var(--primary-gold)';
+            case 2: return 'var(--info-blue)';
+            case 3: return 'var(--warning-orange)';
+            default: return 'var(--text-light)';
+        }
+    }
+
+    // Override de la fonction updateSpellSlots pour inclure l'affichage visuel
+    function updateSpellSlots(level, remaining) {
+        const slotElement = document.getElementById(`spell-slots-${level}`);
+        if (slotElement) {
+            slotElement.textContent = remaining;
+
+            // Animation de mise à jour
+            slotElement.style.transform = 'scale(1.2)';
+            slotElement.style.color = remaining > 0 ? getSlotColor(level) : 'var(--danger-red)';
+            setTimeout(() => {
+                slotElement.style.transform = 'scale(1)';
+                slotElement.style.color = remaining > 0 ? getSlotColor(level) : 'var(--text-muted)';
+            }, 200);
+        }
+
+        // Mettre à jour l'affichage visuel des slots
+        updateSpellSlotsVisual(level, remaining);
+
+        // Mettre à jour aussi dans la navigation si elle existe
+        const navSlotElement = document.getElementById(`nav-spell-slots-${level}`);
+        if (navSlotElement) {
+            navSlotElement.textContent = remaining;
+        }
+    }
+
+    // Test au chargement
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Page Sorts chargée');
+        console.log('Fonctions disponibles:', typeof castSpell, typeof updateSpellSlots);
+    });
+</script>
+{% endblock %}

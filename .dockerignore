@@ -1,0 +1,41 @@
+# Environnement virtuel Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Fichiers de développement
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Fichiers temporaires
+.tmp/
+tmp/
+
+# Fichiers Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Fichiers Docker (éviter la récursion)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Backups
+backups/
+
+# Fichiers système
+.DS_Store
+Thumbs.db

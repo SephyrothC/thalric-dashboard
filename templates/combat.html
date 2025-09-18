@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Combat - {{ character.character_info.name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <!-- Attaques d'armes -->
+    <div class="stat-card">
+        <h2 class="card-title">Attaques d'Armes</h2>
+        <div class="card-content">
+            <!-- Crystal Longsword -->
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h3 style="color: var(--primary-gold); margin-bottom: 10px;">{{ character.weapons.crystal_longsword.name
+                    }}</h3>
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    Bonus d'attaque: <span style="color: var(--secondary-gold);">+{{
+                        character.weapons.crystal_longsword.attack_bonus }}</span> |
+                    Dégâts: <span style="color: var(--secondary-gold);">{{ character.weapons.crystal_longsword.damage }}
+                        + {{ character.weapons.crystal_longsword.magic_damage }} radiant</span>
+                </div>
+
+                <!-- Options d'attaque -->
+                <div style="margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sacred-weapon-check"
+                                onchange="toggleAttackOption('sacred-weapon-check')">
+                            <span>Sacred Weapon (+3 attaque, lumière)</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <span>Divine Smite:</span>
+                            <select id="smite-level-select"
+                                style="background: var(--dark-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 4px; border-radius: 4px;">
+                                <option value="0">Aucun</option>
+                                <option value="1">Niveau 1 (+2d8)</option>
+                                <option value="2">Niveau 2 (+3d8)</option>
+                                <option value="3">Niveau 3 (+4d8)</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
+                        ✨ Improved Divine Smite: +1d8 radiant automatique
+                    </div>
+                </div>
+
+                <!-- Bouton d'attaque -->
+                <button class="btn" onclick="rollWeaponAttack('crystal_longsword')" style="width: 100%; padding: 12px;">
+                    🗡️ Attaquer avec Crystal Longsword
+                </button>
+
+                <!-- Charges de l'épée -->
+                <div style="margin-top: 10px; text-align: center; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Charges restantes:</span>
+                    <span id="crystal-sword-charges" style="color: var(--primary-gold); font-weight: bold;">{{
+                        character.weapons.crystal_longsword.charges }}/{{
+                        character.weapons.crystal_longsword.charges_max }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Divinity -->
+    <div class="stat-card">
+        <h2 class="card-title">Channel Divinity</h2>
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 1.5rem; color: var(--primary-gold);">
+                    <span id="channel-divinity-uses">{{ character.features.channel_divinity.uses }}</span>
+                    <span style="color: var(--text-muted);">/</span>
+                    <span>{{ character.features.channel_divinity.uses_max }}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">utilisations restantes</div>
+            </div>
+
+            <!-- Sacred Weapon -->
+            <div style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <h4 style="color: var(--secondary-gold); margin-bottom: 8px;">Sacred Weapon</h4>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    {{ character.features.channel_divinity.options.sacred_weapon.description }}
+                </p>
+                <button class="btn btn-info btn-small" onclick="useFeature('channel_divinity')" style="width: 100%;">
+                    Utiliser Sacred Weapon
+                </button>
+            </div>
+
+            <!-- Turn the Unholy -->
+            <div style="background: var(--dark-bg); padding: 12px; border-radius: 8px;">
+                <h4 style="color: var(--secondary-gold); margin-bottom: 8px;">Turn the Unholy</h4>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    {{ character.features.channel_divinity.options.turn_the_unholy.description }}
+                </p>
+                <button class="btn btn-info btn-small" onclick="useFeature('channel_divinity')" style="width: 100%;">
+                    Utiliser Turn the Unholy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lay on Hands -->
+    <div class="stat-card">
+        <h2 class="card-title">Lay on Hands</h2>
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 1.8rem; color: var(--success-green);">
+                    <span id="lay-on-hands-pool">{{ character.features.lay_on_hands.pool }}</span>
+                    <span style="color: var(--text-muted);">/</span>
+                    <span>{{ character.features.lay_on_hands.pool_max }}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">points de soins restants</div>
+            </div>
+
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+                    {{ character.features.lay_on_hands.description }}
+                </p>
+
+                <!-- Contrôles de soins -->
+                <div
+                    style="display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 10px;">
+                    <input type="number" id="lay-on-hands-amount" placeholder="HP"
+                        style="width: 70px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                    <button class="btn btn-success btn-small"
+                        onclick="useLay(document.getElementById('lay-on-hands-amount').value)">
+                        Soigner
+                    </button>
+                </div>
+
+                <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                    Ou 5 HP pour guérir maladie/poison
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autres Capacités -->
+    <div class="stat-card">
+        <h2 class="card-title">Capacités</h2>
+        <div class="card-content">
+            <!-- Divine Sense -->
+            <div style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="color: var(--secondary-gold);">Divine Sense</h4>
+                    <span style="color: var(--primary-gold);">
+                        <span id="divine-sense-uses">{{ character.features.divine_sense.uses }}</span>/{{
+                        character.features.divine_sense.uses_max }}
+                    </span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    {{ character.features.divine_sense.description }}
+                </p>
+                <button class="btn btn-info btn-small" onclick="useFeature('divine_sense')" style="width: 100%;">
+                    Utiliser Divine Sense
+                </button>
+            </div>
+
+            <!-- Healing Hands (Aasimar) -->
+            <div style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="color: var(--secondary-gold);">Healing Hands</h4>
+                    <span style="color: var(--primary-gold);">
+                        <span id="healing-hands-uses">{{ character.features.healing_hands.uses }}</span>/{{
+                        character.features.healing_hands.uses_max }}
+                    </span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    {{ character.features.healing_hands.description }} ({{ character.features.healing_hands.healing }})
+                </p>
+                <button class="btn btn-success btn-small" onclick="useFeature('healing_hands')" style="width: 100%;">
+                    Utiliser Healing Hands
+                </button>
+            </div>
+
+            <!-- Radiant Soul (Aasimar) -->
+            <div style="background: var(--dark-bg); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="color: var(--secondary-gold);">Radiant Soul</h4>
+                    <span style="color: var(--primary-gold);">
+                        <span id="radiant-soul-uses">{{ character.features.radiant_soul.uses }}</span>/{{
+                        character.features.radiant_soul.uses_max }}
+                    </span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    {{ character.features.radiant_soul.description }}
+                </p>
+                <button class="btn btn-warning btn-small" onclick="useFeature('radiant_soul')" style="width: 100%;">
+                    ✨ Activer Radiant Soul
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auras Passives -->
+    <div class="stat-card">
+        <h2 class="card-title">Auras (10 pieds)</h2>
+        <div class="card-content">
+            <div style="display: grid; gap: 10px;">
+                <!-- Aura of Protection -->
+                <div
+                    style="background: var(--dark-bg); padding: 10px; border-radius: 8px; border-left: 4px solid var(--success-green);">
+                    <h4 style="color: var(--success-green); margin-bottom: 5px;">Aura of Protection</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        <strong>+{{ character.features.aura_of_protection.bonus }}</strong> aux jets de sauvegarde pour
+                        vous et les alliés
+                    </p>
+                </div>
+
+                <!-- Aura of Courage -->
+                <div
+                    style="background: var(--dark-bg); padding: 10px; border-radius: 8px; border-left: 4px solid var(--warning-orange);">
+                    <h4 style="color: var(--warning-orange); margin-bottom: 5px;">Aura of Courage</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        {{ character.features.aura_of_courage.description }}
+                    </p>
+                </div>
+
+                <!-- Aura of Devotion -->
+                <div
+                    style="background: var(--dark-bg); padding: 10px; border-radius: 8px; border-left: 4px solid var(--info-blue);">
+                    <h4 style="color: var(--info-blue); margin-bottom: 5px;">Aura of Devotion</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        {{ character.features.aura_of_devotion.description }}
+                    </p>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 15px; text-align: center; padding: 10px; background: var(--medium-bg); border-radius: 8px;">
+                <div style="color: var(--primary-gold); font-weight: bold; margin-bottom: 5px;">
+                    🛡️ Zone d'Influence
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Toutes les auras s'étendent à <strong>10 pieds</strong> autour de vous.<br>
+                    Vous devez être conscient pour que les auras fonctionnent.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Résumé Combat -->
+    <div class="stat-card">
+        <h2 class="card-title">Résumé Combat</h2>
+        <div class="card-content">
+            <div style="display: grid; gap: 8px;">
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Classe d'Armure</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.stats.ac }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Points de Vie</span>
+                    <span style="color: var(--success-green); font-weight: bold;">{{ character.stats.hp_current }}/{{
+                        character.stats.hp_max }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Vitesse</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ character.stats.speed }}
+                        pieds</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Initiative</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">{{ "+" if (character.stats.dexterity -
+                        10) // 2 >= 0 else "" }}{{ (character.stats.dexterity - 10) // 2 }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 8px; background: var(--dark-bg); border-radius: 6px;">
+                    <span style="font-size: 0.9rem;">Attaques par tour</span>
+                    <span style="color: var(--primary-gold); font-weight: bold;">2</span>
+                </div>
+            </div>
+
+            <!-- Boutons utiles -->
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-info" onclick="rollSkillCheck('perception', 'Perception')">
+                    👁️ Jet de Perception
+                </button>
+                <button class="btn btn-warning" onclick="rollInitiative()">
+                    ⚡ Jet d'Initiative
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fonction pour utiliser Lay on Hands - définie directement dans la page
+    function useLay(amount) {
+        const healAmount = parseInt(amount);
+        if (isNaN(healAmount) || healAmount <= 0) {
+            showDiceResult('<div class="danger">Veuillez entrer un montant valide</div>');
+            return;
+        }
+
+        console.log(`Utilisation de Lay on Hands: ${healAmount} HP`); // Debug
+
+        // Vérifier que l'élément existe avant
+        const poolElement = document.getElementById('lay-on-hands-pool');
+        console.log('Élément lay-on-hands-pool trouvé:', poolElement); // Debug
+        console.log('Valeur actuelle:', poolElement ? poolElement.textContent : 'INTROUVABLE'); // Debug
+
+        makeRequest('/api/use_lay_on_hands', { amount: healAmount }, function (data) {
+            console.log('Réponse API Lay on Hands:', data); // Debug
+
+            if (data.success) {
+                showDiceResult(`
+                <h3>Lay on Hands</h3>
+                <div class="dice-roll" style="color: var(--success-green);">
+                    +${healAmount} HP soignés
+                </div>
+                <div>Pool restant: ${data.pool_remaining}/${data.pool_max}</div>
+            `);
+
+                // Mise à jour directe de l'élément
+                const poolEl = document.getElementById('lay-on-hands-pool');
+                if (poolEl) {
+                    console.log(`Mise à jour: ${poolEl.textContent} → ${data.pool_remaining}`); // Debug
+                    poolEl.textContent = data.pool_remaining;
+
+                    // Animation visuelle
+                    poolEl.style.transform = 'scale(1.3)';
+                    poolEl.style.color = 'var(--warning-orange)';
+                    setTimeout(() => {
+                        poolEl.style.transform = 'scale(1)';
+                        poolEl.style.color = data.pool_remaining > 0 ? 'var(--success-green)' : 'var(--danger-red)';
+                    }, 300);
+                } else {
+                    console.error('Impossible de trouver lay-on-hands-pool pour la mise à jour!');
+                }
+
+                // Vider l'input
+                const input = document.getElementById('lay-on-hands-amount');
+                if (input) input.value = '';
+            } else {
+                console.error('Erreur API:', data.error);
+                showDiceResult(`<div class="danger">${data.error}</div>`);
+            }
+        });
+    }
+
+    // Fonction pour jet d'initiative
+    function rollInitiative() {
+        const dexMod = {{ (character.stats.dexterity - 10) // 2 }};
+        const roll = Math.floor(Math.random() * 20) + 1;
+        const total = roll + dexMod;
+
+        let resultClass = '';
+        let resultText = '';
+
+        if (roll === 20) {
+            resultClass = 'critical';
+            resultText = '🎯 Critique Naturel!';
+        } else if (roll === 1) {
+            resultClass = 'fumble';
+            resultText = '💀 Échec Critique!';
+        }
+
+        showDiceResult(`
+        <h3>Jet d'Initiative</h3>
+        <div class="dice-roll ${resultClass}">
+            ${roll} ${dexMod >= 0 ? '+' + dexMod : dexMod} = ${total}
+        </div>
+        ${resultText ? `<div class="${resultClass}">${resultText}</div>` : ''}
+    `);
+    }
+
+    // Test de l'existence des fonctions au chargement
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Page Combat chargée');
+        console.log('Fonctions disponibles:', typeof useLay, typeof makeRequest, typeof showDiceResult);
+
+        // Vérifier que l'élément existe
+        const poolElement = document.getElementById('lay-on-hands-pool');
+        console.log('Élément lay-on-hands-pool au chargement:', poolElement);
+        if (poolElement) {
+            console.log('Valeur initiale:', poolElement.textContent);
+        }
+    });
+</script>
+{% endblock %}

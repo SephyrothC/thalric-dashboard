@@ -1,0 +1,885 @@
+{% extends "base.html" %}
+
+{% block title %}Inventaire - {{ character.character_info.name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <!-- Gestion de l'argent -->
+    <div class="stat-card">
+        <h2 class="card-title">💰 Argent</h2>
+        <div class="card-content">
+            <div class="currency-grid">
+                <!-- Pièces de platine -->
+                <div class="currency-item">
+                    <div class="currency-name">Platine (PP)</div>
+                    <div class="currency-amount" id="platinum-amount">{{ character.inventory.currency.platinum }}</div>
+                    <div class="currency-controls">
+                        <input type="number" id="platinum-input" placeholder="±PP" class="currency-input"
+                            data-currency="platinum"
+                            style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                        <button class="btn btn-small btn-info" onclick="applyCurrencyChange('platinum')">OK</button>
+                    </div>
+                </div>
+
+                <!-- Pièces d'or -->
+                <div class="currency-item">
+                    <div class="currency-name">Or (PO)</div>
+                    <div class="currency-amount" id="gold-amount">{{ character.inventory.currency.gold }}</div>
+                    <div class="currency-controls">
+                        <input type="number" id="gold-input" placeholder="±PO" class="currency-input"
+                            data-currency="gold"
+                            style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                        <button class="btn btn-small btn-info" onclick="applyCurrencyChange('gold')">OK</button>
+                    </div>
+                </div>
+
+                <!-- Pièces d'électrum -->
+                <div class="currency-item">
+                    <div class="currency-name">Électrum (PE)</div>
+                    <div class="currency-amount" id="electrum-amount">{{ character.inventory.currency.electrum }}</div>
+                    <div class="currency-controls">
+                        <input type="number" id="electrum-input" placeholder="±PE" class="currency-input"
+                            data-currency="electrum"
+                            style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                        <button class="btn btn-small btn-info" onclick="applyCurrencyChange('electrum')">OK</button>
+                    </div>
+                </div>
+
+                <!-- Pièces d'argent -->
+                <div class="currency-item">
+                    <div class="currency-name">Argent (PA)</div>
+                    <div class="currency-amount" id="silver-amount">{{ character.inventory.currency.silver }}</div>
+                    <div class="currency-controls">
+                        <input type="number" id="silver-input" placeholder="±PA" class="currency-input"
+                            data-currency="silver"
+                            style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                        <button class="btn btn-small btn-info" onclick="applyCurrencyChange('silver')">OK</button>
+                    </div>
+                </div>
+
+                <!-- Pièces de cuivre -->
+                <div class="currency-item">
+                    <div class="currency-name">Cuivre (PC)</div>
+                    <div class="currency-amount" id="copper-amount">{{ character.inventory.currency.copper }}</div>
+                    <div class="currency-controls">
+                        <input type="number" id="copper-input" placeholder="±PC" class="currency-input"
+                            data-currency="copper"
+                            style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light); text-align: center;">
+                        <button class="btn btn-small btn-info" onclick="applyCurrencyChange('copper')">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculateur de richesse -->
+            <div style="margin-top: 20px; padding: 15px; background: var(--dark-bg); border-radius: 8px;">
+                <h4 style="color: var(--primary-gold); margin-bottom: 10px;">💎 Richesse Totale</h4>
+                <div style="font-size: 1.2rem; color: var(--secondary-gold);">
+                    <span id="total-wealth">{{ (character.inventory.currency.platinum * 10) +
+                        character.inventory.currency.gold + (character.inventory.currency.electrum * 0.5) +
+                        (character.inventory.currency.silver * 0.1) + (character.inventory.currency.copper * 0.01)
+                        }}</span> PO équivalentes
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
+                    Conversion : 1 PP = 10 PO | 1 PE = 0.5 PO | 1 PA = 0.1 PO | 1 PC = 0.01 PO
+                </div>
+            </div>
+
+            <!-- Raccourcis rapides -->
+            <div style="margin-top: 15px;">
+                <h4 style="color: var(--info-blue); margin-bottom: 10px;">⚡ Raccourcis</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-small btn-info" onclick="quickTransaction('treasure', 1000)">💰 Trésor (+1000
+                        PO)</button>
+                    <button class="btn btn-small btn-warning" onclick="quickTransaction('loot', 100)">🎒 Butin (+100
+                        PO)</button>
+                    <button class="btn btn-small btn-danger" onclick="quickTransaction('expense', -50)">🛍️ Dépense (-50
+                        PO)</button>
+                    <button class="btn btn-small btn-danger" onclick="quickTransaction('revivify', -300)">💎 Revivify
+                        (-300 PO)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventaire principal -->
+    <div class="stat-card" style="grid-column: span 2;">
+        <h2 class="card-title">🎒 Inventaire & Notes</h2>
+        <div class="card-content">
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="color: var(--secondary-gold);">📝 Notes d'inventaire</h4>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        <span id="save-status">💾 Sauvegarde automatique</span>
+                    </div>
+                </div>
+                <textarea id="inventory-notes" class="inventory-notes" placeholder="Équipement, objets, notes diverses...
+
+Exemples :
+• Armure de plaques +1 (portée)
+• Bouclier Sentinelle (porté) 
+• Épée de cristal - 3 charges (équipée)
+• Anneau de résistance au froid (porté)
+• Potion de soins supérieure x2
+• Corde de soie (50 pieds)
+• Symbole sacré
+• Diamants pour Revivify (300 po)
+• Rations x5 jours
+• Kit d'aventurier
+• Parchemin de sort
+• Pierre précieuse
+• Lettre importante
+
+Lieu de stockage :
+• Sac à dos principal
+• Sacoche de ceinture
+• Monture / véhicule
+• Base / auberge">{{ character.inventory.notes }}</textarea>
+            </div>
+
+            <!-- Outils d'inventaire -->
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                <button class="btn btn-info btn-small" onclick="addTemplate('equipment')">⚔️ Ajouter équipement</button>
+                <button class="btn btn-success btn-small" onclick="addTemplate('consumable')">🧪 Ajouter
+                    consommable</button>
+                <button class="btn btn-warning btn-small" onclick="addTemplate('treasure')">💎 Ajouter trésor</button>
+                <button class="btn btn-danger btn-small" onclick="clearInventory()">🗑️ Vider tout</button>
+            </div>
+
+            <!-- Statistiques d'inventaire -->
+            <div style="margin-top: 20px; padding: 15px; background: var(--dark-bg); border-radius: 8px;">
+                <h4 style="color: var(--info-blue); margin-bottom: 10px;">📊 Statistiques</h4>
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.9rem;">
+                    <div>
+                        <span style="color: var(--text-muted);">Lignes de texte:</span>
+                        <span id="lines-count" style="color: var(--secondary-gold); font-weight: bold;">0</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Caractères:</span>
+                        <span id="char-count" style="color: var(--secondary-gold); font-weight: bold;">0</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Dernière modif:</span>
+                        <span id="last-modified" style="color: var(--secondary-gold); font-weight: bold;">Jamais</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Objets magiques équipés -->
+    <div class="stat-card">
+        <h2 class="card-title">✨ Objets Magiques Équipés</h2>
+        <div class="card-content">
+            <!-- Crystal Longsword -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-orange);">
+                <h4 style="color: var(--warning-orange); margin-bottom: 5px;">
+                    {{ character.weapons.crystal_longsword.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.weapons.crystal_longsword.description }}
+                </p>
+                <div style="font-size: 0.8rem; color: var(--secondary-gold);">
+                    Charges: {{ character.weapons.crystal_longsword.charges }}/{{
+                    character.weapons.crystal_longsword.charges_max }}
+                </div>
+            </div>
+
+            <!-- Plate Armor +1 -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.armor.plate_armor.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    CA 18 + 1 | Désavantage en discrétion
+                </p>
+                <div style="font-size: 0.8rem; color: var(--success-green);">
+                    ⚔️ Équipé (corps)
+                </div>
+            </div>
+
+            <!-- Sentinel Shield -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.armor.sentinel_shield.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.armor.sentinel_shield.description }}
+                </p>
+                <div style="font-size: 0.8rem; color: var(--success-green);">
+                    🛡️ Équipé (main)
+                </div>
+            </div>
+
+            <!-- Ring of Resistance -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.magic_items.ring_of_cold_resistance.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.magic_items.ring_of_cold_resistance.description }}
+                </p>
+                <div style="font-size: 0.8rem; color: var(--success-green);">
+                    💍 Équipé (annulaire)
+                </div>
+            </div>
+
+            <!-- Statut d'harmonisation -->
+            <div style="margin-top: 15px; padding: 10px; background: var(--medium-bg); border-radius: 6px;">
+                <h5 style="color: var(--secondary-gold); margin-bottom: 8px;">🔮 Harmonisation</h5>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    <div>Objets harmonisés: <span style="color: var(--primary-gold);">2/3</span></div>
+                    <div style="margin-top: 5px;">Crystal Longsword, Sentinel Shield</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculatrices utiles -->
+    <div class="stat-card">
+        <h2 class="card-title">🧮 Outils Utiles</h2>
+        <div class="card-content">
+            <!-- Convertisseur de monnaie -->
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h4 style="color: var(--secondary-gold); margin-bottom: 10px;">💱 Convertisseur</h4>
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="number" id="convert-amount" placeholder="Montant"
+                        style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light);">
+                    <select id="convert-from"
+                        style="padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light);">
+                        <option value="platinum">PP</option>
+                        <option value="gold">PO</option>
+                        <option value="electrum">PE</option>
+                        <option value="silver">PA</option>
+                        <option value="copper">PC</option>
+                    </select>
+                    <span style="color: var(--text-muted);">→</span>
+                    <select id="convert-to"
+                        style="padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light);">
+                        <option value="platinum">PP</option>
+                        <option value="gold" selected>PO</option>
+                        <option value="electrum">PE</option>
+                        <option value="silver">PA</option>
+                        <option value="copper">PC</option>
+                    </select>
+                    <button class="btn btn-small btn-info" onclick="convertCurrency()">Convert</button>
+                </div>
+                <div id="conversion-result" style="font-size: 0.9rem; color: var(--primary-gold); min-height: 20px;">
+                </div>
+            </div>
+
+            <!-- Calculateur de partage -->
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h4 style="color: var(--info-blue); margin-bottom: 10px;">👥 Partage de trésor</h4>
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="number" id="treasure-total" placeholder="Trésor total (PO)"
+                        style="width: 120px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light);">
+                    <span style="color: var(--text-muted);">÷</span>
+                    <input type="number" id="party-size" placeholder="Nb joueurs" value="4"
+                        style="width: 80px; padding: 6px; background: var(--medium-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-light);">
+                    <button class="btn btn-small btn-success" onclick="calculateShare()">Partager</button>
+                </div>
+                <div id="share-result" style="font-size: 0.9rem; color: var(--success-green); min-height: 20px;"></div>
+            </div>
+
+            <!-- Générateur de butin -->
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                <h4 style="color: var(--warning-orange); margin-bottom: 10px;">🎲 Générateur de butin</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-small btn-warning" onclick="generateLoot('minor')">Trésor mineur</button>
+                    <button class="btn btn-small btn-warning" onclick="generateLoot('major')">Trésor majeur</button>
+                    <button class="btn btn-small btn-info" onclick="generateLoot('gems')">Gemmes</button>
+                </div>
+                <div id="loot-result"
+                    style="margin-top: 10px; font-size: 0.9rem; color: var(--secondary-gold); min-height: 20px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popups pour l'ajout d'objets -->
+<!-- Popup Équipement -->
+<div id="equipment-popup" class="inventory-popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <div class="popup-title">⚔️ Ajouter Équipement</div>
+            <span class="popup-close" onclick="closePopup('equipment-popup')">&times;</span>
+        </div>
+        <form class="popup-form" onsubmit="addEquipment(event)">
+            <div class="form-group">
+                <label for="eq-name">Nom de l'équipement *</label>
+                <input type="text" id="eq-name" class="form-input" placeholder="ex: Épée longue +1" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="eq-type">Type</label>
+                    <select id="eq-type" class="form-select">
+                        <option value="arme">Arme</option>
+                        <option value="armure">Armure</option>
+                        <option value="bouclier">Bouclier</option>
+                        <option value="accessoire">Accessoire</option>
+                        <option value="outil">Outil</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="eq-status">Statut</label>
+                    <select id="eq-status" class="form-select">
+                        <option value="équipé">Équipé</option>
+                        <option value="porté">Porté</option>
+                        <option value="rangé">Rangé</option>
+                        <option value="stocké">Stocké</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="eq-quantity">Quantité</label>
+                    <input type="number" id="eq-quantity" class="form-input" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="eq-weight">Poids (optionnel)</label>
+                    <input type="text" id="eq-weight" class="form-input" placeholder="ex: 2 kg">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="eq-properties">Propriétés / Description</label>
+                <textarea id="eq-properties" class="form-input form-textarea"
+                    placeholder="Propriétés magiques, bonus, description..."></textarea>
+            </div>
+            <div class="popup-buttons">
+                <button type="button" class="btn btn-small" onclick="closePopup('equipment-popup')">Annuler</button>
+                <button type="submit" class="btn btn-small btn-info">Ajouter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Popup Consommable -->
+<div id="consumable-popup" class="inventory-popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <div class="popup-title">🧪 Ajouter Consommable</div>
+            <span class="popup-close" onclick="closePopup('consumable-popup')">&times;</span>
+        </div>
+        <form class="popup-form" onsubmit="addConsumable(event)">
+            <div class="form-group">
+                <label for="cons-name">Nom du consommable *</label>
+                <input type="text" id="cons-name" class="form-input" placeholder="ex: Potion de soins" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cons-type">Type</label>
+                    <select id="cons-type" class="form-select">
+                        <option value="potion">Potion</option>
+                        <option value="parchemin">Parchemin</option>
+                        <option value="nourriture">Nourriture</option>
+                        <option value="munition">Munition</option>
+                        <option value="composant">Composant</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cons-quantity">Quantité *</label>
+                    <input type="number" id="cons-quantity" class="form-input" value="1" min="1" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cons-rarity">Rareté</label>
+                    <select id="cons-rarity" class="form-select">
+                        <option value="commun">Commun</option>
+                        <option value="peu commun">Peu commun</option>
+                        <option value="rare">Rare</option>
+                        <option value="très rare">Très rare</option>
+                        <option value="légendaire">Légendaire</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cons-value">Valeur unitaire</label>
+                    <input type="text" id="cons-value" class="form-input" placeholder="ex: 50 po">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cons-effect">Effet / Description</label>
+                <textarea id="cons-effect" class="form-input form-textarea"
+                    placeholder="Effet du consommable, durée, conditions d'utilisation..." required></textarea>
+            </div>
+            <div class="popup-buttons">
+                <button type="button" class="btn btn-small" onclick="closePopup('consumable-popup')">Annuler</button>
+                <button type="submit" class="btn btn-small btn-success">Ajouter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Popup Trésor -->
+<div id="treasure-popup" class="inventory-popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <div class="popup-title">💎 Ajouter Trésor</div>
+            <span class="popup-close" onclick="closePopup('treasure-popup')">&times;</span>
+        </div>
+        <form class="popup-form" onsubmit="addTreasure(event)">
+            <div class="form-group">
+                <label for="treas-name">Nom du trésor *</label>
+                <input type="text" id="treas-name" class="form-input" placeholder="ex: Rubis étoilé, Collier royal"
+                    required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="treas-type">Type</label>
+                    <select id="treas-type" class="form-select">
+                        <option value="gemme">Gemme</option>
+                        <option value="bijou">Bijou</option>
+                        <option value="œuvre d'art">Œuvre d'art</option>
+                        <option value="objet de valeur">Objet de valeur</option>
+                        <option value="relique">Relique</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="treas-quantity">Quantité</label>
+                    <input type="number" id="treas-quantity" class="form-input" value="1" min="1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="treas-value">Valeur estimée *</label>
+                    <input type="text" id="treas-value" class="form-input" placeholder="ex: 500 po" required>
+                </div>
+                <div class="form-group">
+                    <label for="treas-weight">Poids</label>
+                    <input type="text" id="treas-weight" class="form-input" placeholder="ex: 0.1 kg">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="treas-description">Description / Histoire</label>
+                <textarea id="treas-description" class="form-input form-textarea"
+                    placeholder="Origine, histoire, particularités, état de conservation..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="treas-location">Lieu de découverte</label>
+                <input type="text" id="treas-location" class="form-input"
+                    placeholder="ex: Tombe du roi oublié, Coffre du dragon">
+            </div>
+            <div class="popup-buttons">
+                <button type="button" class="btn btn-small" onclick="closePopup('treasure-popup')">Annuler</button>
+                <button type="submit" class="btn btn-small btn-warning">Ajouter</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variables globales pour l'inventaire
+    let saveTimeout;
+
+    // Fonction pour les transactions rapides
+    function quickTransaction(type, amount) {
+        let description = '';
+        switch (type) {
+            case 'treasure':
+                description = '💰 Gros trésor découvert';
+                break;
+            case 'loot':
+                description = '🎒 Butin de combat';
+                break;
+            case 'expense':
+                description = '🛍️ Dépenses diverses';
+                break;
+            case 'revivify':
+                description = '💎 Composants pour Revivify';
+                break;
+        }
+
+        modifyCurrency('gold', amount);
+
+        showDiceResult(`
+        <h3>${description}</h3>
+        <div class="dice-roll" style="color: ${amount > 0 ? 'var(--success-green)' : 'var(--danger-red)'};">
+            ${amount > 0 ? '+' : ''}${amount} PO
+        </div>
+    `);
+    }
+
+    // Fonction pour calculer la richesse totale
+    function updateTotalWealth() {
+        const platinum = parseInt(document.getElementById('platinum-amount').textContent) || 0;
+        const gold = parseInt(document.getElementById('gold-amount').textContent) || 0;
+        const electrum = parseInt(document.getElementById('electrum-amount').textContent) || 0;
+        const silver = parseInt(document.getElementById('silver-amount').textContent) || 0;
+        const copper = parseInt(document.getElementById('copper-amount').textContent) || 0;
+
+        const total = (platinum * 10) + gold + (electrum * 0.5) + (silver * 0.1) + (copper * 0.01);
+
+        document.getElementById('total-wealth').textContent = total.toFixed(2);
+    }
+
+    // Fonction pour appliquer un changement de monnaie via input
+    function applyCurrencyChange(currencyType) {
+        const input = document.getElementById(`${currencyType}-input`);
+        const change = parseInt(input.value);
+
+        if (isNaN(change) || change === 0) {
+            showDiceResult('<div class="danger">Veuillez entrer une valeur valide (nombre positif ou négatif)</div>');
+            return;
+        }
+
+        modifyCurrency(currencyType, change);
+        input.value = ''; // Vider l'input après utilisation
+    }
+
+    // Override de modifyCurrency pour mettre à jour la richesse totale
+    function modifyCurrency(type, change) {
+        makeRequest('/api/modify_currency', {
+            type: type,
+            change: change
+        }, function (data) {
+            const amountElement = document.getElementById(`${type}-amount`);
+            if (amountElement) {
+                amountElement.textContent = data.amount;
+
+                // Animation
+                amountElement.style.transform = 'scale(1.2)';
+                amountElement.style.color = change > 0 ? 'var(--success-green)' : 'var(--danger-red)';
+                setTimeout(() => {
+                    amountElement.style.transform = 'scale(1)';
+                    amountElement.style.color = 'var(--primary-gold)';
+                }, 200);
+            }
+
+            // Mettre à jour la richesse totale
+            updateTotalWealth();
+
+            const changeText = change > 0 ? `+${change}` : `${change}`;
+            const changeColor = change > 0 ? 'success-green' : 'danger-red';
+
+            showDiceResult(`
+            <h3>Modification de l'argent</h3>
+            <div class="dice-roll" style="color: var(--${changeColor})">
+                ${changeText} ${type.toUpperCase()}
+            </div>
+            <div>Total ${type.toUpperCase()}: ${data.amount}</div>
+        `);
+        });
+    }
+
+    // Fonctions pour les templates d'inventaire avec popups
+    function addTemplate(type) {
+        switch (type) {
+            case 'equipment':
+                showPopup('equipment-popup');
+                break;
+            case 'consumable':
+                showPopup('consumable-popup');
+                break;
+            case 'treasure':
+                showPopup('treasure-popup');
+                break;
+        }
+    }
+
+    // Gestion des popups
+    function showPopup(popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.style.display = 'flex';
+            popup.classList.add('fade-in');
+            // Focus sur le premier input
+            const firstInput = popup.querySelector('input[type="text"], textarea');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+        }
+    }
+
+    function closePopup(popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.style.display = 'none';
+            popup.classList.remove('fade-in');
+            // Reset du formulaire
+            const form = popup.querySelector('form');
+            if (form) form.reset();
+        }
+    }
+
+    // Fermer popup en cliquant à l'extérieur
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('inventory-popup')) {
+            closePopup(e.target.id);
+        }
+    });
+
+    // Fermer popup avec Échap
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.inventory-popup').forEach(popup => {
+                if (popup.style.display === 'flex') {
+                    closePopup(popup.id);
+                }
+            });
+        }
+    });
+
+    // Fonctions d'ajout d'objets
+    function addEquipment(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('eq-name').value;
+        const type = document.getElementById('eq-type').value;
+        const status = document.getElementById('eq-status').value;
+        const quantity = document.getElementById('eq-quantity').value;
+        const weight = document.getElementById('eq-weight').value;
+        const properties = document.getElementById('eq-properties').value;
+
+        let entry = `• ${name}`;
+        if (quantity > 1) entry += ` x${quantity}`;
+        entry += ` (${type})`;
+        if (weight) entry += ` - ${weight}`;
+        entry += ` - ${status}`;
+        if (properties) entry += `\n  ↳ ${properties}`;
+        entry += '\n';
+
+        addToInventory(entry);
+        closePopup('equipment-popup');
+
+        showDiceResult(`
+        <h3>Équipement Ajouté</h3>
+        <div class="dice-roll" style="color: var(--info-blue);">
+            ⚔️ ${name}
+        </div>
+        <div>${type} - ${status}</div>
+    `);
+    }
+
+    function addConsumable(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('cons-name').value;
+        const type = document.getElementById('cons-type').value;
+        const quantity = document.getElementById('cons-quantity').value;
+        const rarity = document.getElementById('cons-rarity').value;
+        const value = document.getElementById('cons-value').value;
+        const effect = document.getElementById('cons-effect').value;
+
+        let entry = `• ${name} x${quantity} (${type})`;
+        if (value) entry += ` - ${value}`;
+        if (rarity !== 'commun') entry += ` [${rarity}]`;
+        entry += `\n  ↳ ${effect}`;
+        entry += '\n';
+
+        addToInventory(entry);
+        closePopup('consumable-popup');
+
+        showDiceResult(`
+        <h3>Consommable Ajouté</h3>
+        <div class="dice-roll" style="color: var(--success-green);">
+            🧪 ${name} x${quantity}
+        </div>
+        <div>${type} - ${rarity}</div>
+    `);
+    }
+
+    function addTreasure(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('treas-name').value;
+        const type = document.getElementById('treas-type').value;
+        const quantity = document.getElementById('treas-quantity').value;
+        const value = document.getElementById('treas-value').value;
+        const weight = document.getElementById('treas-weight').value;
+        const description = document.getElementById('treas-description').value;
+        const location = document.getElementById('treas-location').value;
+
+        let entry = `• ${name}`;
+        if (quantity > 1) entry += ` x${quantity}`;
+        entry += ` (${type}) - Valeur: ${value}`;
+        if (weight) entry += ` - ${weight}`;
+        if (location) entry += `\n  ↳ Trouvé: ${location}`;
+        if (description) entry += `\n  ↳ ${description}`;
+        entry += '\n';
+
+        addToInventory(entry);
+        closePopup('treasure-popup');
+
+        showDiceResult(`
+        <h3>Trésor Ajouté</h3>
+        <div class="dice-roll" style="color: var(--warning-orange);">
+            💎 ${name}
+        </div>
+        <div>Valeur: ${value}</div>
+    `);
+    }
+
+    // Fonction utilitaire pour ajouter du texte à l'inventaire
+    function addToInventory(text) {
+        const textarea = document.getElementById('inventory-notes');
+        if (textarea) {
+            // Ajouter à la fin du texte existant
+            if (textarea.value && !textarea.value.endsWith('\n')) {
+                textarea.value += '\n';
+            }
+            textarea.value += text;
+
+            // Sauvegarder et mettre à jour les stats
+            updateInventoryStats();
+            saveInventoryNotes();
+
+            // Scroll vers la fin
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+    }
+
+    function clearInventory() {
+        if (confirm('Êtes-vous sûr de vouloir vider tout l\'inventaire ?')) {
+            document.getElementById('inventory-notes').value = '';
+            saveInventoryNotes();
+            updateInventoryStats();
+        }
+    }
+
+    // Convertisseur de monnaie
+    function convertCurrency() {
+        const amount = parseFloat(document.getElementById('convert-amount').value);
+        const fromCurrency = document.getElementById('convert-from').value;
+        const toCurrency = document.getElementById('convert-to').value;
+
+        if (isNaN(amount) || amount <= 0) {
+            document.getElementById('conversion-result').innerHTML = '<span style="color: var(--danger-red);">Montant invalide</span>';
+            return;
+        }
+
+        // Taux de conversion vers l'or
+        const rates = {
+            platinum: 10,
+            gold: 1,
+            electrum: 0.5,
+            silver: 0.1,
+            copper: 0.01
+        };
+
+        // Convertir vers l'or puis vers la monnaie cible
+        const goldValue = amount * rates[fromCurrency];
+        const result = goldValue / rates[toCurrency];
+
+        document.getElementById('conversion-result').innerHTML =
+            `<strong>${amount} ${fromCurrency.toUpperCase()} = ${result.toFixed(2)} ${toCurrency.toUpperCase()}</strong>`;
+    }
+
+    // Calculateur de partage
+    function calculateShare() {
+        const total = parseFloat(document.getElementById('treasure-total').value);
+        const partySize = parseInt(document.getElementById('party-size').value);
+
+        if (isNaN(total) || isNaN(partySize) || total <= 0 || partySize <= 0) {
+            document.getElementById('share-result').innerHTML = '<span style="color: var(--danger-red);">Valeurs invalides</span>';
+            return;
+        }
+
+        const share = total / partySize;
+        document.getElementById('share-result').innerHTML =
+            `<strong>Chaque joueur reçoit: ${share.toFixed(2)} PO</strong>`;
+    }
+
+    // Générateur de butin
+    function generateLoot(type) {
+        let result = '';
+
+        switch (type) {
+            case 'minor':
+                const minorAmount = Math.floor(Math.random() * 100) + 50;
+                result = `${minorAmount} PO + quelques objets communs`;
+                break;
+            case 'major':
+                const majorAmount = Math.floor(Math.random() * 1000) + 500;
+                result = `${majorAmount} PO + objet magique potentiel`;
+                break;
+            case 'gems':
+                const gems = ['Rubis', 'Émeraude', 'Saphir', 'Diamant', 'Topaze', 'Améthyste'];
+                const gem = gems[Math.floor(Math.random() * gems.length)];
+                const value = (Math.floor(Math.random() * 10) + 1) * 50;
+                result = `${gem} (${value} PO)`;
+                break;
+        }
+
+        document.getElementById('loot-result').innerHTML = `<strong>${result}</strong>`;
+    }
+
+    // Statistiques d'inventaire
+    function updateInventoryStats() {
+        const textarea = document.getElementById('inventory-notes');
+        const text = textarea.value;
+        const lines = text.split('\n').length;
+        const chars = text.length;
+
+        document.getElementById('lines-count').textContent = lines;
+        document.getElementById('char-count').textContent = chars;
+        document.getElementById('last-modified').textContent = new Date().toLocaleTimeString();
+    }
+
+    // Sauvegarde automatique avec indicateur
+    function saveInventoryNotes() {
+        const notes = document.getElementById('inventory-notes')?.value || '';
+        const statusElement = document.getElementById('save-status');
+
+        statusElement.innerHTML = '💾 Sauvegarde...';
+        statusElement.style.color = 'var(--warning-orange)';
+
+        makeRequest('/api/update_inventory', { notes: notes }, function (data) {
+            if (data.success) {
+                statusElement.innerHTML = '✅ Sauvegardé';
+                statusElement.style.color = 'var(--success-green)';
+
+                setTimeout(() => {
+                    statusElement.innerHTML = '💾 Sauvegarde automatique';
+                    statusElement.style.color = 'var(--text-muted)';
+                }, 2000);
+            } else {
+                statusElement.innerHTML = '❌ Erreur';
+                statusElement.style.color = 'var(--danger-red)';
+            }
+        });
+    }
+
+    // Événements
+    document.addEventListener('DOMContentLoaded', function () {
+        const textarea = document.getElementById('inventory-notes');
+
+        if (textarea) {
+            // Sauvegarde automatique
+            textarea.addEventListener('input', function () {
+                clearTimeout(saveTimeout);
+                updateInventoryStats();
+                saveTimeout = setTimeout(saveInventoryNotes, 2000);
+            });
+
+            // Statistiques initiales
+            updateInventoryStats();
+        }
+
+        // Richesse totale initiale
+        updateTotalWealth();
+
+        // Gestion des inputs de monnaie avec la touche Entrée
+        document.querySelectorAll('.currency-input').forEach(input => {
+            input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    const currency = this.dataset.currency;
+                    applyCurrencyChange(currency);
+                    e.preventDefault();
+                }
+            });
+        });
+
+        console.log('Page Inventaire chargée');
+    });
+</script>
+{% endblock %}
