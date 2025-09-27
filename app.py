@@ -71,6 +71,205 @@ def inventory():
 
 # API - Jet de sauvegarde
 
+# Ajouter cette route dans app.py après les autres routes de pages
+
+# Route Lanceur de Dés
+
+
+@app.route('/dice')
+def dice_roller():
+    data = load_character_data()
+    return render_template('dice.html', character=data)
+
+# API - Lancer des dés personnalisés
+
+
+@app.route('/api/roll_dice', methods=['POST'])
+def roll_dice_api():
+    data = request.json
+    count = data.get('count', 1)
+    sides = data.get('sides', 20)
+    modifier = data.get('modifier', 0)
+    label = data.get('label', '')
+
+    # Validation des paramètres
+    if count < 1 or count > 50:
+        return jsonify({'error': 'Nombre de dés invalide (1-50)'}), 400
+    if sides not in [4, 6, 8, 10, 12, 20, 100]:
+        return jsonify({'error': 'Type de dé invalide'}), 400
+    if modifier < -20 or modifier > 20:
+        return jsonify({'error': 'Modificateur invalide (-20 à +20)'}), 400
+
+    # Lancer les dés
+    rolls = roll_dice(count, sides)
+    total_dice = sum(rolls)
+    final_total = total_dice + modifier
+
+    # Créer la formule d'affichage
+    formula = f"{count}d{sides}"
+    if modifier > 0:
+        formula += f"+{modifier}"
+    elif modifier < 0:
+        formula += str(modifier)
+
+    # Déterminer si c'est critique/fumble
+    is_critical = (count == 1 and sides == 20 and rolls[0] == 20)
+    is_fumble = (count == 1 and sides == 20 and rolls[0] == 1)
+
+    return jsonify({
+        'rolls': rolls,
+        'total_dice': total_dice,
+        'modifier': modifier,
+        'final_total': final_total,
+        'formula': formula,
+        'label': label,
+        'critical': is_critical,
+        'fumble': is_fumble
+    })
+
+# API - Jet avec avantage/désavantage
+
+
+@app.route('/api/roll_advantage', methods=['POST'])
+def roll_advantage_api():
+    data = request.json
+    # 'advantage', 'disadvantage', 'normal'
+    advantage_type = data.get('type', 'normal')
+    modifier = data.get('modifier', 0)
+
+    if advantage_type == 'advantage':
+        roll1 = roll_die(20)
+        roll2 = roll_die(20)
+        dice_result = max(roll1, roll2)
+        final_total = dice_result + modifier
+
+        return jsonify({
+            'type': 'advantage',
+            'rolls': [roll1, roll2],
+            'dice_result': dice_result,
+            'modifier': modifier,
+            'final_total': final_total,
+            'formula': f"Avantage 2d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
+            'details': f"({roll1}, {roll2} → {dice_result})"
+        })
+
+    elif advantage_type == 'disadvantage':
+        roll1 = roll_die(20)
+        roll2 = roll_die(20)
+        dice_result = min(roll1, roll2)
+        final_total = dice_result + modifier
+
+        return jsonify({
+            'type': 'disadvantage',
+            'rolls': [roll1, roll2],
+            'dice_result': dice_result,
+            'modifier': modifier,
+            'final_total': final_total,
+            'formula': f"Désavantage 2d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
+            'details': f"({roll1}, {roll2} → {dice_result})"
+        })
+
+    else:  # normal
+        roll = roll_die(20)
+        final_total = roll + modifier
+
+        return jsonify({
+            'type': 'normal',
+            'rolls': [roll],
+            'dice_result': roll,
+            'modifier': modifier,
+            'final_total': final_total,
+            'formula': f"1d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
+            'critical': roll == 20,
+            'fumble': roll == 1
+        })
+
+# API - Générer des statistiques D&D
+
+
+@app.route('/api/generate_stats', methods=['POST'])
+def generate_stats_api():
+    stats = []
+    abilities = ['Force', 'Dextérité', 'Constitution',
+                 'Intelligence', 'Sagesse', 'Charisme']
+
+    for ability in abilities:
+        # Lancer 4d6, garder les 3 plus hauts
+        rolls = sorted(roll_dice(4, 6), reverse=True)
+        stat = sum(rolls[:3])
+        modifier = (stat - 10) // 2
+
+        stats.append({
+            'ability': ability,
+            'value': stat,
+            'modifier': modifier,
+            'rolls': rolls,
+            'kept_rolls': rolls[:3]
+        })
+
+    total_modifiers = sum(stat['modifier'] for stat in stats)
+    average_stat = sum(stat['value'] for stat in stats) / 6
+
+    return jsonify({
+        'stats': stats,
+        'total_modifiers': total_modifiers,
+        'average_stat': round(average_stat, 1)
+    })
+
+# API - Jets spéciaux D&D
+
+
+@app.route('/api/special_roll', methods=['POST'])
+def special_roll_api():
+    data = request.json
+    roll_type = data.get('type')
+
+    character_data = load_character_data()
+
+    if roll_type == 'initiative':
+        # Initiative = 1d20 + Modificateur de Dextérité
+        dex_modifier = get_modifier(
+            character_data['stats']['abilities']['dexterity'])
+        roll = roll_die(20)
+        total = roll + dex_modifier
+
+        return jsonify({
+            'type': 'initiative',
+            'roll': roll,
+            'modifier': dex_modifier,
+            'total': total,
+            'formula': f"1d20+{dex_modifier}",
+            'details': f"({roll} + {dex_modifier} Dex)"
+        })
+
+    elif roll_type == 'hit_dice':
+        # Dé de vie Paladin = 1d10 + Modificateur de Constitution
+        con_modifier = get_modifier(
+            character_data['stats']['abilities']['constitution'])
+        roll = roll_die(10)
+        total = roll + con_modifier
+
+        return jsonify({
+            'type': 'hit_dice',
+            'roll': roll,
+            'modifier': con_modifier,
+            'total': total,
+            'formula': f"1d10+{con_modifier}",
+            'details': f"({roll} + {con_modifier} Con) PV récupérés"
+        })
+
+    elif roll_type == 'percentile':
+        roll = roll_die(100)
+
+        return jsonify({
+            'type': 'percentile',
+            'roll': roll,
+            'formula': 'd100',
+            'details': f"{roll}%"
+        })
+
+    else:
+        return jsonify({'error': 'Type de jet invalide'}), 400
 
 @app.route('/api/saving_throw', methods=['POST'])
 def saving_throw():

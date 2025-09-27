@@ -29,7 +29,7 @@
             </div>
         </header>
 
-        <!-- Navigation -->
+        <!-- Navigation mise à jour avec la page Dés -->
         <nav class="main-nav">
             <a href="{{ url_for('state') }}" class="nav-item {% if request.endpoint == 'state' %}active{% endif %}">
                 <span class="nav-icon">📊</span>
@@ -42,6 +42,10 @@
             <a href="{{ url_for('spells') }}" class="nav-item {% if request.endpoint == 'spells' %}active{% endif %}">
                 <span class="nav-icon">✨</span>
                 <span class="nav-text">Sorts</span>
+            </a>
+            <a href="{{ url_for('dice_roller') }}" class="nav-item {% if request.endpoint == 'dice_roller' %}active{% endif %}">
+                <span class="nav-icon">🎲</span>
+                <span class="nav-text">Dés</span>
             </a>
             <a href="{{ url_for('inventory') }}" class="nav-item {% if request.endpoint == 'inventory' %}active{% endif %}">
                 <span class="nav-icon">🎒</span>
