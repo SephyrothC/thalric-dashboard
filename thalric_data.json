@@ -94,7 +94,7 @@
     },
     "spell_slots_current": {
       "1": 4,
-      "2": 3,
+      "2": 2,
       "3": 3
     }
   },
@@ -278,7 +278,7 @@
     },
     "divine_sense": {
       "name": "Divine Sense",
-      "uses": 4,
+      "uses": 2,
       "uses_max": 4,
       "recharge": "long_rest",
       "description": "Detect celestials, fiends, undead within 60ft as action"

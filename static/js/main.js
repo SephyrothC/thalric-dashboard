@@ -2,6 +2,30 @@
 let currentHP = parseInt(document.getElementById('hp-current')?.textContent) || 0;
 let radiantSoulActive = false; // État de Radiant Soul
 
+// WebSocket pour diffusion des dés
+let diceSocket = null;
+
+// === INITIALISATION WEBSOCKET ===
+function initDiceWebSocket() {
+    // Ne pas initialiser WebSocket sur la page viewer
+    if (window.location.pathname !== '/dice-viewer') {
+        try {
+            diceSocket = io();
+            console.log('🎲 WebSocket initialisé pour diffusion des dés');
+            
+            diceSocket.on('connect', function() {
+                console.log('📡 WebSocket connecté pour diffusion');
+            });
+            
+            diceSocket.on('disconnect', function() {
+                console.log('📡 WebSocket déconnecté');
+            });
+        } catch (error) {
+            console.log('⚠️ WebSocket non disponible:', error);
+        }
+    }
+}
+
 // === UTILITAIRES ===
 function showDiceResult(result) {
     const resultsDiv = document.getElementById('dice-results');
@@ -10,6 +34,43 @@ function showDiceResult(result) {
     resultText.innerHTML = result;
     resultsDiv.style.display = 'flex';
     resultsDiv.classList.add('fade-in');
+    
+    // Extraire et diffuser les données si WebSocket disponible
+    if (diceSocket && diceSocket.connected) {
+        try {
+            const rollData = extractRollDataFromResult(result);
+            if (rollData) {
+                // Les données seront diffusées par les API endpoints modifiées
+                console.log('🎲 Données extraites pour diffusion:', rollData);
+            }
+        } catch (error) {
+            console.error('Erreur extraction données dé:', error);
+        }
+    }
+}
+
+function extractRollDataFromResult(htmlResult) {
+    // Parser le HTML pour extraire les informations de jet
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlResult, 'text/html');
+    
+    const titleElement = doc.querySelector('h3');
+    const diceRollElement = doc.querySelector('.dice-roll');
+    
+    if (titleElement && diceRollElement) {
+        const resultText = diceRollElement.textContent.trim();
+        const resultNumber = parseInt(resultText.split(' ')[0]) || 0;
+        
+        return {
+            roll_type: titleElement.textContent.trim(),
+            result: resultNumber,
+            formula: 'Custom',
+            details: resultText,
+            timestamp: new Date().toLocaleTimeString()
+        };
+    }
+    
+    return null;
 }
 
 function closeDiceResult() {
@@ -598,8 +659,37 @@ function modifyCurrency(type, change) {
     });
 }
 
+// === LANCEUR DE DÉS PERSONNALISÉ ===
+function rollCustomDice() {
+    const count = parseInt(document.getElementById('dice-count')?.value) || 1;
+    const sides = parseInt(document.getElementById('dice-type')?.value) || 20;
+    const modifier = parseInt(document.getElementById('dice-modifier')?.value) || 0;
+    
+    makeRequest('/api/roll_custom_dice', {
+        count: count,
+        sides: sides,
+        modifier: modifier,
+        label: `Jet personnalisé ${count}d${sides}${modifier !== 0 ? (modifier > 0 ? '+' + modifier : modifier) : ''}`
+    }, function(data) {
+        if (data.success) {
+            const result = `
+                <h3>Jet Personnalisé</h3>
+                <div class="dice-roll">
+                    ${data.total}
+                </div>
+                <div>Formule: ${data.formula}</div>
+                <div>Détails: [${data.rolls.join(', ')}]</div>
+            `;
+            showDiceResult(result);
+        }
+    });
+}
+
 // === ÉVÉNEMENTS ===
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser WebSocket
+    initDiceWebSocket();
+    
     // Fermer les résultats en cliquant en dehors
     document.getElementById('dice-results')?.addEventListener('click', function(e) {
         if (e.target === this) {

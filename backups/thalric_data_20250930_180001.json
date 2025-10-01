@@ -42,7 +42,7 @@
     "crystal_longsword": {
       "name": "Crystal Longsword",
       "type": "martial_melee",
-      "attack_bonus": 8,
+      "attack_bonus": 7,
       "damage": "1d8+4",
       "damage_type": "slashing",
       "magic_damage": "1d8",

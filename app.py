@@ -1,8 +1,15 @@
 from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO, emit
 import json
 import random
+from datetime import datetime
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'thalric_dice_secret_key'
+
+# Configuration WebSocket
+socketio = SocketIO(app, cors_allowed_origins="*",
+                    logger=True, engineio_logger=True)
 
 # Charger les données du personnage
 
@@ -11,7 +18,7 @@ def load_character_data():
     with open('thalric_data.json', 'r', encoding='utf-8') as f:
         return json.load(f)
 
-# Sauvegarder les données du personnage (pour les changements d'état)
+# Sauvegarder les données du personnage
 
 
 def save_character_data(data):
@@ -36,7 +43,60 @@ def roll_die(sides):
 def roll_dice(num_dice, sides):
     return [roll_die(sides) for _ in range(num_dice)]
 
-# Route principale - Page State
+# ============================================================================
+# WEBSOCKET FUNCTIONS
+# ============================================================================
+
+
+@socketio.on('connect')
+def handle_connect():
+    """Connexion d'un client WebSocket"""
+    print(f'Client connecté: {request.sid}')
+    emit('status', {'msg': 'Connecté au visionneur de dés Thalric'})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Déconnexion d'un client WebSocket"""
+    print(f'Client déconnecté: {request.sid}')
+
+
+def broadcast_dice_result(dice_data):
+    """Diffuser un résultat de dé à tous les clients connectés"""
+    # Formater les données pour l'affichage
+    formatted_data = {
+        'timestamp': datetime.now().strftime('%H:%M:%S'),
+        'character': 'Thalric Cœur d\'Argent',
+        'roll_type': dice_data.get('roll_type', 'Jet de dé'),
+        'formula': dice_data.get('formula', ''),
+        'result': dice_data.get('result', 0),
+        'details': dice_data.get('details', ''),
+        'is_critical': dice_data.get('critical', False),
+        'is_fumble': dice_data.get('fumble', False),
+        'damage_type': dice_data.get('damage_type', ''),
+        'animation_class': get_animation_class(dice_data)
+    }
+
+    # Diffuser à tous les clients connectés
+    socketio.emit('new_dice_roll', formatted_data)
+    print(
+        f"🎲 Diffusion: {formatted_data['roll_type']} = {formatted_data['result']}")
+
+
+def get_animation_class(dice_data):
+    """Déterminer la classe d'animation selon le type de jet"""
+    if dice_data.get('critical'):
+        return 'critical-success'
+    elif dice_data.get('fumble'):
+        return 'critical-failure'
+    elif dice_data.get('damage_type'):
+        return 'damage-roll'
+    else:
+        return 'normal-roll'
+
+# ============================================================================
+# ROUTES PRINCIPALES
+# ============================================================================
 
 
 @app.route('/')
@@ -45,15 +105,11 @@ def state():
     data = load_character_data()
     return render_template('state.html', character=data)
 
-# Route Combat
-
 
 @app.route('/combat')
 def combat():
     data = load_character_data()
     return render_template('combat.html', character=data)
-
-# Route Sorts
 
 
 @app.route('/spells')
@@ -61,19 +117,11 @@ def spells():
     data = load_character_data()
     return render_template('spells.html', character=data)
 
-# Route Inventaire
-
 
 @app.route('/inventory')
 def inventory():
     data = load_character_data()
     return render_template('inventory.html', character=data)
-
-# API - Jet de sauvegarde
-
-# Ajouter cette route dans app.py après les autres routes de pages
-
-# Route Lanceur de Dés
 
 
 @app.route('/dice')
@@ -81,195 +129,16 @@ def dice_roller():
     data = load_character_data()
     return render_template('dice.html', character=data)
 
-# API - Lancer des dés personnalisés
 
+@app.route('/dice-viewer')
+def dice_viewer():
+    """Page du visionneur de dés pour la tablette"""
+    return render_template('dice_viewer.html')
 
-@app.route('/api/roll_dice', methods=['POST'])
-def roll_dice_api():
-    data = request.json
-    count = data.get('count', 1)
-    sides = data.get('sides', 20)
-    modifier = data.get('modifier', 0)
-    label = data.get('label', '')
+# ============================================================================
+# API ENDPOINTS AVEC WEBSOCKET
+# ============================================================================
 
-    # Validation des paramètres
-    if count < 1 or count > 50:
-        return jsonify({'error': 'Nombre de dés invalide (1-50)'}), 400
-    if sides not in [4, 6, 8, 10, 12, 20, 100]:
-        return jsonify({'error': 'Type de dé invalide'}), 400
-    if modifier < -20 or modifier > 20:
-        return jsonify({'error': 'Modificateur invalide (-20 à +20)'}), 400
-
-    # Lancer les dés
-    rolls = roll_dice(count, sides)
-    total_dice = sum(rolls)
-    final_total = total_dice + modifier
-
-    # Créer la formule d'affichage
-    formula = f"{count}d{sides}"
-    if modifier > 0:
-        formula += f"+{modifier}"
-    elif modifier < 0:
-        formula += str(modifier)
-
-    # Déterminer si c'est critique/fumble
-    is_critical = (count == 1 and sides == 20 and rolls[0] == 20)
-    is_fumble = (count == 1 and sides == 20 and rolls[0] == 1)
-
-    return jsonify({
-        'rolls': rolls,
-        'total_dice': total_dice,
-        'modifier': modifier,
-        'final_total': final_total,
-        'formula': formula,
-        'label': label,
-        'critical': is_critical,
-        'fumble': is_fumble
-    })
-
-# API - Jet avec avantage/désavantage
-
-
-@app.route('/api/roll_advantage', methods=['POST'])
-def roll_advantage_api():
-    data = request.json
-    # 'advantage', 'disadvantage', 'normal'
-    advantage_type = data.get('type', 'normal')
-    modifier = data.get('modifier', 0)
-
-    if advantage_type == 'advantage':
-        roll1 = roll_die(20)
-        roll2 = roll_die(20)
-        dice_result = max(roll1, roll2)
-        final_total = dice_result + modifier
-
-        return jsonify({
-            'type': 'advantage',
-            'rolls': [roll1, roll2],
-            'dice_result': dice_result,
-            'modifier': modifier,
-            'final_total': final_total,
-            'formula': f"Avantage 2d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
-            'details': f"({roll1}, {roll2} → {dice_result})"
-        })
-
-    elif advantage_type == 'disadvantage':
-        roll1 = roll_die(20)
-        roll2 = roll_die(20)
-        dice_result = min(roll1, roll2)
-        final_total = dice_result + modifier
-
-        return jsonify({
-            'type': 'disadvantage',
-            'rolls': [roll1, roll2],
-            'dice_result': dice_result,
-            'modifier': modifier,
-            'final_total': final_total,
-            'formula': f"Désavantage 2d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
-            'details': f"({roll1}, {roll2} → {dice_result})"
-        })
-
-    else:  # normal
-        roll = roll_die(20)
-        final_total = roll + modifier
-
-        return jsonify({
-            'type': 'normal',
-            'rolls': [roll],
-            'dice_result': roll,
-            'modifier': modifier,
-            'final_total': final_total,
-            'formula': f"1d20{'+' + str(modifier) if modifier > 0 else str(modifier) if modifier < 0 else ''}",
-            'critical': roll == 20,
-            'fumble': roll == 1
-        })
-
-# API - Générer des statistiques D&D
-
-
-@app.route('/api/generate_stats', methods=['POST'])
-def generate_stats_api():
-    stats = []
-    abilities = ['Force', 'Dextérité', 'Constitution',
-                 'Intelligence', 'Sagesse', 'Charisme']
-
-    for ability in abilities:
-        # Lancer 4d6, garder les 3 plus hauts
-        rolls = sorted(roll_dice(4, 6), reverse=True)
-        stat = sum(rolls[:3])
-        modifier = (stat - 10) // 2
-
-        stats.append({
-            'ability': ability,
-            'value': stat,
-            'modifier': modifier,
-            'rolls': rolls,
-            'kept_rolls': rolls[:3]
-        })
-
-    total_modifiers = sum(stat['modifier'] for stat in stats)
-    average_stat = sum(stat['value'] for stat in stats) / 6
-
-    return jsonify({
-        'stats': stats,
-        'total_modifiers': total_modifiers,
-        'average_stat': round(average_stat, 1)
-    })
-
-# API - Jets spéciaux D&D
-
-
-@app.route('/api/special_roll', methods=['POST'])
-def special_roll_api():
-    data = request.json
-    roll_type = data.get('type')
-
-    character_data = load_character_data()
-
-    if roll_type == 'initiative':
-        # Initiative = 1d20 + Modificateur de Dextérité
-        dex_modifier = get_modifier(
-            character_data['stats']['abilities']['dexterity'])
-        roll = roll_die(20)
-        total = roll + dex_modifier
-
-        return jsonify({
-            'type': 'initiative',
-            'roll': roll,
-            'modifier': dex_modifier,
-            'total': total,
-            'formula': f"1d20+{dex_modifier}",
-            'details': f"({roll} + {dex_modifier} Dex)"
-        })
-
-    elif roll_type == 'hit_dice':
-        # Dé de vie Paladin = 1d10 + Modificateur de Constitution
-        con_modifier = get_modifier(
-            character_data['stats']['abilities']['constitution'])
-        roll = roll_die(10)
-        total = roll + con_modifier
-
-        return jsonify({
-            'type': 'hit_dice',
-            'roll': roll,
-            'modifier': con_modifier,
-            'total': total,
-            'formula': f"1d10+{con_modifier}",
-            'details': f"({roll} + {con_modifier} Con) PV récupérés"
-        })
-
-    elif roll_type == 'percentile':
-        roll = roll_die(100)
-
-        return jsonify({
-            'type': 'percentile',
-            'roll': roll,
-            'formula': 'd100',
-            'details': f"{roll}%"
-        })
-
-    else:
-        return jsonify({'error': 'Type de jet invalide'}), 400
 
 @app.route('/api/saving_throw', methods=['POST'])
 def saving_throw():
@@ -282,6 +151,19 @@ def saving_throw():
     roll = roll_die(20)
     total = roll + saving_throw_bonus
 
+    # Préparer les données pour diffusion
+    dice_data = {
+        'roll_type': f'Jet de Sauvegarde - {ability.title()}',
+        'formula': f'1d20+{saving_throw_bonus}',
+        'result': total,
+        'details': f'({roll} + {saving_throw_bonus})',
+        'critical': roll == 20,
+        'fumble': roll == 1
+    }
+
+    # Diffuser le résultat en temps réel
+    broadcast_dice_result(dice_data)
+
     return jsonify({
         'roll': roll,
         'bonus': saving_throw_bonus,
@@ -289,8 +171,6 @@ def saving_throw():
         'critical': roll == 20,
         'fumble': roll == 1
     })
-
-# API - Jet de compétence
 
 
 @app.route('/api/skill_check', methods=['POST'])
@@ -304,6 +184,17 @@ def skill_check():
     roll = roll_die(20)
     total = roll + skill_bonus
 
+    # Diffuser le résultat
+    dice_data = {
+        'roll_type': f'Test de {skill.title()}',
+        'formula': f'1d20+{skill_bonus}',
+        'result': total,
+        'details': f'({roll} + {skill_bonus})',
+        'critical': roll == 20,
+        'fumble': roll == 1
+    }
+    broadcast_dice_result(dice_data)
+
     return jsonify({
         'roll': roll,
         'bonus': skill_bonus,
@@ -311,31 +202,6 @@ def skill_check():
         'critical': roll == 20,
         'fumble': roll == 1
     })
-
-# API - Modifier les HP
-
-
-@app.route('/api/modify_hp', methods=['POST'])
-def modify_hp():
-    data = request.json
-    change = data.get('change')
-
-    character_data = load_character_data()
-    current_hp = character_data['stats']['hp_current']
-    max_hp = character_data['stats']['hp_max']
-
-    new_hp = max(0, min(max_hp, current_hp + change))
-    character_data['stats']['hp_current'] = new_hp
-
-    save_character_data(character_data)
-
-    return jsonify({
-        'hp_current': new_hp,
-        'hp_max': max_hp,
-        'change': new_hp - current_hp
-    })
-
-# API - Attaque d'arme
 
 
 @app.route('/api/weapon_attack', methods=['POST'])
@@ -361,68 +227,67 @@ def weapon_attack():
     hit = attack_total >= 15 or attack_roll == 20
     is_critical = attack_roll == 20
 
+    # Diffuser le jet d'attaque
+    attack_data = {
+        'roll_type': f'Attaque - {weapon["name"]}',
+        'formula': f'1d20+{attack_bonus}',
+        'result': attack_total,
+        'details': f'({attack_roll} + {attack_bonus})',
+        'critical': is_critical,
+        'fumble': attack_roll == 1
+    }
+    broadcast_dice_result(attack_data)
+
     damage_rolls = []
     total_damage = 0
 
     if hit:
         if is_critical:
             # RÈGLE CUSTOM CRITIQUE : Dégâts max + dégâts normaux
-
-            # Dégâts max de base (8 + 3 = 11)
             max_base_damage = 8 + 3
             damage_rolls.append(f"Base MAX: {max_base_damage}")
             total_damage += max_base_damage
 
-            # Dégâts normaux de base
             normal_base = roll_die(8) + 3
             damage_rolls.append(f"Base normal: {normal_base}")
             total_damage += normal_base
 
-            # Dégâts magiques max (8)
             max_magic_damage = 8
             damage_rolls.append(f"Crystal MAX: {max_magic_damage} radiant")
             total_damage += max_magic_damage
 
-            # Dégâts magiques normaux
             normal_magic = roll_die(8)
             damage_rolls.append(f"Crystal normal: {normal_magic} radiant")
             total_damage += normal_magic
 
-            # Improved Divine Smite max (8)
             max_improved_smite = 8
             damage_rolls.append(
                 f"Improved Smite MAX: {max_improved_smite} radiant")
             total_damage += max_improved_smite
 
-            # Improved Divine Smite normal
             normal_improved = roll_die(8)
             damage_rolls.append(
                 f"Improved Smite normal: {normal_improved} radiant")
             total_damage += normal_improved
 
         else:
-            # Dégâts normaux
             base_damage = roll_die(8) + 3
             damage_rolls.append(f"Base: {base_damage}")
             total_damage += base_damage
 
-            # Dégâts magiques de l'épée de cristal
             magic_damage = roll_die(8)
             damage_rolls.append(f"Crystal: {magic_damage} radiant")
             total_damage += magic_damage
 
-            # Improved Divine Smite (automatique niveau 11)
             improved_smite = roll_die(8)
             damage_rolls.append(f"Improved Smite: {improved_smite} radiant")
             total_damage += improved_smite
 
         # Divine Smite si utilisé
         if divine_smite_level > 0:
-            # 2d8 base + 1d8 par niveau au-dessus de 1
             smite_dice = 2 + (divine_smite_level - 1)
 
             if is_critical:
-                # Divine Smite critique : max + normal
                 max_smite = smite_dice * 8
                 normal_smite = sum(roll_dice(smite_dice, 8))
                 smite_damage = max_smite + normal_smite
@@ -435,11 +300,25 @@ def weapon_attack():
 
             total_damage += smite_damage
 
-        # Radiant Soul si actif (+4 dégâts radiants)
+        # Radiant Soul si actif
         if radiant_soul_active:
             radiant_bonus = 4
             damage_rolls.append(f"Radiant Soul: {radiant_bonus} radiant")
             total_damage += radiant_bonus
+
+        # Diffuser les dégâts
+        damage_data = {
+            'roll_type': f'Dégâts - {weapon["name"]}',
+            'formula': weapon['damage'],
+            'result': total_damage,
+            'details': ' + '.join(damage_rolls),
+            'damage_type': 'physical',
+            'critical': is_critical
+        }
+
+        # Petit délai pour l'effet visuel
+        socketio.sleep(0.5)
+        broadcast_dice_result(damage_data)
 
     return jsonify({
         'attack_roll': attack_roll,
@@ -452,8 +331,6 @@ def weapon_attack():
         'sacred_weapon_used': sacred_weapon
     })
 
-# API - Lancer un sort
-
 
 @app.route('/api/cast_spell', methods=['POST'])
 def cast_spell():
@@ -465,9 +342,8 @@ def cast_spell():
     character_data = load_character_data()
 
     # Déterminer le niveau minimum du sort
-    spell_min_level = 1  # Par défaut niveau 1
+    spell_min_level = 1
 
-    # Chercher le sort dans les différents niveaux pour connaître son niveau minimum
     for level_key, spells in character_data['spells'].items():
         if level_key == 'cantrips':
             continue
@@ -477,19 +353,25 @@ def cast_spell():
                 spell_min_level = level_num
                 break
 
-    # Le niveau effectif de lancement est le maximum entre le niveau choisi et le niveau minimum du sort
     effective_level = max(spell_level, spell_min_level)
 
-    # Vérifier les emplacements de sorts au niveau effectif
     current_slots = character_data['spellcasting']['spell_slots_current'].get(
         str(effective_level), 0)
     if current_slots <= 0:
-        return jsonify({'error': f'Pas d\'emplacements de niveau {effective_level} disponibles (requis pour ce sort)'})
+        return jsonify({'error': f'Pas d\'emplacements de niveau {effective_level} disponibles'})
 
-    # Utiliser un emplacement au niveau effectif
     character_data['spellcasting']['spell_slots_current'][str(
         effective_level)] -= 1
     save_character_data(character_data)
+
+    # Diffuser le lancement de sort
+    spell_data = {
+        'roll_type': f'Sort - {spell_name.replace("_", " ").title()}',
+        'formula': f'Niveau {effective_level}',
+        'result': f'Lancé',
+        'details': f'DD {character_data["spellcasting"]["spell_save_dc"]}',
+    }
+    broadcast_dice_result(spell_data)
 
     result = {
         'spell_name': spell_name,
@@ -499,23 +381,98 @@ def cast_spell():
         'slots_remaining': character_data['spellcasting']['spell_slots_current'][str(effective_level)]
     }
 
-    # Si c'est un sort d'attaque
     if is_attack_spell:
         attack_roll = roll_die(20)
         spell_attack_bonus = character_data['spellcasting']['spell_attack_bonus']
         attack_total = attack_roll + spell_attack_bonus
 
+        # Diffuser l'attaque de sort
+        attack_data = {
+            'roll_type': f'Attaque de Sort - {spell_name.replace("_", " ").title()}',
+            'formula': f'1d20+{spell_attack_bonus}',
+            'result': attack_total,
+            'details': f'({attack_roll} + {spell_attack_bonus})',
+            'critical': attack_roll == 20,
+            'fumble': attack_roll == 1
+        }
+        broadcast_dice_result(attack_data)
+
         result.update({
             'attack_roll': attack_roll,
             'attack_bonus': spell_attack_bonus,
             'attack_total': attack_total,
-            'hit': attack_total >= 15,  # AC assumée
+            'hit': attack_total >= 15,
             'critical': attack_roll == 20
         })
 
     return jsonify(result)
 
-# API - Utiliser une capacité
+
+@app.route('/api/roll_custom_dice', methods=['POST'])
+def roll_custom_dice():
+    """API pour les jets de dés personnalisés"""
+    data = request.json
+    count = data.get('count', 1)
+    sides = data.get('sides', 20)
+    modifier = data.get('modifier', 0)
+    label = data.get('label', 'Jet de dé')
+
+    # Lancer les dés
+    rolls = [roll_die(sides) for _ in range(count)]
+    total_dice = sum(rolls)
+    final_total = total_dice + modifier
+
+    # Créer la formule
+    formula = f"{count}d{sides}"
+    if modifier > 0:
+        formula += f"+{modifier}"
+    elif modifier < 0:
+        formula += str(modifier)
+
+    # Préparer pour diffusion
+    dice_data = {
+        'roll_type': label,
+        'formula': formula,
+        'result': final_total,
+        'details': f"[{', '.join(map(str, rolls))}]{f' + {modifier}' if modifier != 0 else ''}",
+        'critical': count == 1 and sides == 20 and rolls[0] == 20,
+        'fumble': count == 1 and sides == 20 and rolls[0] == 1
+    }
+
+    # Diffuser
+    broadcast_dice_result(dice_data)
+
+    return jsonify({
+        'rolls': rolls,
+        'total': final_total,
+        'formula': formula,
+        'success': True
+    })
+
+# ============================================================================
+# AUTRES API ENDPOINTS (sans modification)
+# ============================================================================
+
+
+@app.route('/api/modify_hp', methods=['POST'])
+def modify_hp():
+    data = request.json
+    change = data.get('change')
+
+    character_data = load_character_data()
+    current_hp = character_data['stats']['hp_current']
+    max_hp = character_data['stats']['hp_max']
+
+    new_hp = max(0, min(max_hp, current_hp + change))
+    character_data['stats']['hp_current'] = new_hp
+
+    save_character_data(character_data)
+
+    return jsonify({
+        'hp_current': new_hp,
+        'hp_max': max_hp,
+        'change': new_hp - current_hp
+    })
 
 
 @app.route('/api/use_feature', methods=['POST'])
@@ -536,28 +493,62 @@ def use_feature():
             'uses_remaining': feature['uses']
         }
 
-        # Cas spécial pour Healing Hands - lancer 4d4
         if feature_name == 'healing_hands':
             healing_roll = sum(roll_dice(4, 4))
             result['healing_roll'] = healing_roll
             result['healing_dice'] = '4d4'
 
-        return jsonify(result)
+            # Diffuser le jet de soins
+            heal_data = {
+                'roll_type': 'Healing Hands',
+                'formula': '4d4',
+                'result': healing_roll,
+                'details': f'{healing_roll} HP soignés',
+                'damage_type': 'healing'
+            }
+            broadcast_dice_result(heal_data)
 
-    elif 'pool' in feature and feature['pool'] > 0:
-        # Pour Lay on Hands, on ne décrémente pas automatiquement
-        return jsonify({
-            'success': True,
-            'feature': feature_name,
-            'pool_remaining': feature['pool']
-        })
+        return jsonify(result)
     else:
         return jsonify({
             'success': False,
             'error': 'Pas d\'utilisations restantes'
         })
 
-# API - Modifier l'inventaire
+
+@app.route('/api/use_lay_on_hands', methods=['POST'])
+def use_lay_on_hands():
+    data = request.json
+    amount = data.get('amount', 0)
+
+    character_data = load_character_data()
+    lay_on_hands = character_data['features']['lay_on_hands']
+
+    if amount <= 0:
+        return jsonify({'success': False, 'error': 'Montant invalide'})
+
+    if lay_on_hands['pool'] < amount:
+        return jsonify({'success': False, 'error': 'Pool insuffisant'})
+
+    lay_on_hands['pool'] -= amount
+    save_character_data(character_data)
+
+    # Diffuser l'utilisation de Lay on Hands
+    heal_data = {
+        'roll_type': 'Lay on Hands',
+        'formula': f'{amount} HP',
+        'result': amount,
+        'details': f'{amount} HP soignés',
+        'damage_type': 'healing'
+    }
+    broadcast_dice_result(heal_data)
+
+    return jsonify({
+        'success': True,
+        'amount_used': amount,
+        'pool_remaining': lay_on_hands['pool'],
+        'pool_max': lay_on_hands['pool_max']
+    })
 
 
 @app.route('/api/update_inventory', methods=['POST'])
@@ -570,8 +561,6 @@ def update_inventory():
     save_character_data(character_data)
 
     return jsonify({'success': True})
-
-# API - Modifier l'argent
 
 
 @app.route('/api/modify_currency', methods=['POST'])
@@ -593,43 +582,31 @@ def modify_currency():
         'change': new_amount - current
     })
 
-# API - Repos court
-
 
 @app.route('/api/short_rest', methods=['POST'])
 def short_rest():
     character_data = load_character_data()
-
-    # Récupérer Channel Divinity
     character_data['features']['channel_divinity']['uses'] = character_data['features']['channel_divinity']['uses_max']
-
     save_character_data(character_data)
     return jsonify({'message': 'Repos court effectué'})
-
-# API - Repos long
 
 
 @app.route('/api/long_rest', methods=['POST'])
 def long_rest():
     character_data = load_character_data()
 
-    # Récupérer tous les emplacements de sorts
     character_data['spellcasting']['spell_slots_current'] = character_data['spellcasting']['spell_slots'].copy()
 
-    # Récupérer toutes les capacités
     for feature in character_data['features'].values():
         if 'uses_max' in feature:
             feature['uses'] = feature['uses_max']
         if 'pool_max' in feature:
             feature['pool'] = feature['pool_max']
 
-    # HP max
     character_data['stats']['hp_current'] = character_data['stats']['hp_max']
 
     save_character_data(character_data)
     return jsonify({'message': 'Repos long effectué'})
-
-# API - Obtenir les emplacements de sorts actuels
 
 
 @app.route('/api/get_spell_slots', methods=['POST'])
@@ -638,36 +615,6 @@ def get_spell_slots():
     return jsonify({
         'spell_slots_current': character_data['spellcasting']['spell_slots_current']
     })
-
-# API - Utiliser Lay on Hands
-
-
-@app.route('/api/use_lay_on_hands', methods=['POST'])
-def use_lay_on_hands():
-    data = request.json
-    amount = data.get('amount', 0)
-
-    character_data = load_character_data()
-    lay_on_hands = character_data['features']['lay_on_hands']
-
-    if amount <= 0:
-        return jsonify({'success': False, 'error': 'Montant invalide'})
-
-    if lay_on_hands['pool'] < amount:
-        return jsonify({'success': False, 'error': 'Pool insuffisant'})
-
-    # Décrémenter le pool
-    lay_on_hands['pool'] -= amount
-    save_character_data(character_data)
-
-    return jsonify({
-        'success': True,
-        'amount_used': amount,
-        'pool_remaining': lay_on_hands['pool'],
-        'pool_max': lay_on_hands['pool_max']
-    })
-
-# API - Obtenir les utilisations d'une capacité
 
 
 @app.route('/api/get_feature_uses', methods=['POST'])
@@ -689,14 +636,15 @@ def get_feature_uses():
 if __name__ == '__main__':
     import os
 
-    # Configuration pour Docker/Production
-    # Écouter sur toutes les interfaces pour Docker
     host = os.getenv('FLASK_HOST', '0.0.0.0')
     port = int(os.getenv('FLASK_PORT', 5000))
     debug = os.getenv('FLASK_ENV') == 'development'
 
-    print(f"🐲 Démarrage de Thalric Dashboard...")
-    print(f"🌐 Serveur : http://{host}:{port}")
+    print(f"🐲 Démarrage de Thalric Dashboard avec WebSocket...")
+    print(f"🌐 Dashboard : http://{host}:{port}")
+    print(f"📱 Visionneur : http://{host}:{port}/dice-viewer")
     print(f"🔧 Mode debug : {debug}")
 
-    app.run(debug=debug, host=host, port=port)
+    # Utiliser socketio.run au lieu de app.run
+    socketio.run(app, debug=debug, host=host,
+                 port=port, allow_unsafe_werkzeug=True)

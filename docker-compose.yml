@@ -14,7 +14,12 @@ services:
     environment:
       - FLASK_ENV=production
       - FLASK_APP=app.py
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
     restart: unless-stopped
+    # Exposer sur toutes les interfaces réseau pour accès tablette
+    networks:
+      - thalric-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       interval: 30s
@@ -38,3 +43,10 @@ services:
         crond -f
       "
     restart: unless-stopped
+    networks:
+      - thalric-network
+
+# Créer un réseau pour permettre la communication
+networks:
+  thalric-network:
+    driver: bridge
