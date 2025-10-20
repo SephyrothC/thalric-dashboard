@@ -62,7 +62,7 @@
 
             <!-- Niveau 3 -->
             <div
-                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--warning-orange);">
+                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--warning-orange);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h3 style="color: var(--warning-orange); margin: 0;">Niveau 3</h3>
                     <div style="font-size: 1.2rem;">
@@ -82,6 +82,28 @@
                 </div>
             </div>
 
+            <!-- Niveau 4 -->
+            <div
+                style="background: var(--dark-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--danger-red);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: var(--danger-red); margin: 0;">Niveau 4</h3>
+                    <div style="font-size: 1.2rem;">
+                        <span id="spell-slots-4" style="color: var(--danger-red); font-weight: bold;">{{
+                            character.spellcasting.spell_slots_current['4'] }}</span>
+                        <span style="color: var(--text-muted);">/</span>
+                        <span style="color: var(--text-light);">{{ character.spellcasting.spell_slots['4'] }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    {% for i in range(character.spellcasting.spell_slots['4']) %}
+                    <div class="spell-slot" data-level="4" data-slot="{{ i + 1 }}"
+                        style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--danger-red); 
+                             {% if i < character.spellcasting.spell_slots_current['4'] %}background: var(--danger-red);{% else %}background: transparent;{% endif %}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
             <!-- Contrôles niveau de sort -->
             <div style="margin-top: 20px; text-align: center;">
                 <label style="display: flex; align-items: center; justify-content: center; gap: 10px;">
@@ -91,6 +113,7 @@
                         <option value="1">Niveau 1</option>
                         <option value="2">Niveau 2</option>
                         <option value="3">Niveau 3</option>
+                        <option value="4">Niveau 4</option>
                     </select>
                 </label>
                 <div
@@ -140,9 +163,7 @@
                 style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
                 <h4 style="color: var(--success-green); margin-bottom: 5px;">
                     {{ character.spells.level_1.protection_from_evil_and_good.name }}
-                    {% if character.spells.level_1.protection_from_evil_and_good.get('always_prepared') %}
                     <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
-                    {% endif %}
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
                     {{ character.spells.level_1.protection_from_evil_and_good.description }}
@@ -158,15 +179,42 @@
                 style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
                 <h4 style="color: var(--info-blue); margin-bottom: 5px;">
                     {{ character.spells.level_1.sanctuary.name }}
-                    {% if character.spells.level_1.sanctuary.get('always_prepared') %}
                     <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
-                    {% endif %}
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
                     {{ character.spells.level_1.sanctuary.description }}
                 </p>
                 <button class="btn btn-small btn-info" onclick="castSpell('sanctuary', false)" style="width: 100%;">
                     🏛️ Lancer
+                </button>
+            </div>
+
+            <!-- Bless -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_1.bless.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_1.bless.description }}
+                </p>
+                <button class="btn btn-small" onclick="castSpell('bless', false)" style="width: 100%;">
+                    ✨ Lancer
+                </button>
+            </div>
+
+            <!-- Cure Wounds -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_1.cure_wounds.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_1.cure_wounds.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('cure_wounds', false)"
+                    style="width: 100%;">
+                    💚 Lancer
                 </button>
             </div>
 
@@ -180,7 +228,7 @@
                     {{ character.spells.level_1.shield_of_faith.description }}
                 </p>
                 <button class="btn btn-small" onclick="castSpell('shield_of_faith', false)" style="width: 100%;">
-                    ✨ Lancer
+                    🛡️ Lancer
                 </button>
             </div>
         </div>
@@ -202,36 +250,36 @@
                 </p>
                 <button class="btn btn-small btn-success" onclick="castSpell('lesser_restoration', false)"
                     style="width: 100%;">
-                    🔄 Lancer
+                    ✨ Lancer
                 </button>
             </div>
 
             <!-- Zone of Truth -->
             <div
-                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-orange);">
-                <h4 style="color: var(--warning-orange); margin-bottom: 5px;">
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
                     {{ character.spells.level_2.zone_of_truth.name }}
                     <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
                     {{ character.spells.level_2.zone_of_truth.description }}
                 </p>
-                <button class="btn btn-small btn-warning" onclick="castSpell('zone_of_truth', false)"
+                <button class="btn btn-small btn-info" onclick="castSpell('zone_of_truth', false)"
                     style="width: 100%;">
-                    🔍 Lancer
+                    👁️ Lancer
                 </button>
             </div>
 
             <!-- Aid -->
             <div
-                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
-                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-orange);">
+                <h4 style="color: var(--warning-orange); margin-bottom: 5px;">
                     {{ character.spells.level_2.aid.name }}
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
                     {{ character.spells.level_2.aid.description }}
                 </p>
-                <button class="btn btn-small btn-info" onclick="castSpell('aid', false)" style="width: 100%;">
+                <button class="btn btn-small btn-warning" onclick="castSpell('aid', false)" style="width: 100%;">
                     💪 Lancer
                 </button>
             </div>
@@ -272,68 +320,125 @@
                 </button>
             </div>
 
-            <!-- Remove Curse -->
+            <!-- Beacon of Hope -->
             <div
                 style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
                 <h4 style="color: var(--success-green); margin-bottom: 5px;">
-                    {{ character.spells.level_3.remove_curse.name }}
-                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
-                </h4>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
-                    {{ character.spells.level_3.remove_curse.description }}
-                </p>
-                <button class="btn btn-small btn-success" onclick="castSpell('remove_curse', false)"
-                    style="width: 100%;">
-                    ✂️ Lancer
-                </button>
-            </div>
-
-            <!-- Revivify -->
-            <div
-                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--primary-gold);">
-                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
-                    {{ character.spells.level_3.revivify.name }}
-                </h4>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
-                    {{ character.spells.level_3.revivify.description }}
-                </p>
-                <div style="font-size: 0.7rem; color: var(--danger-red); margin-bottom: 8px;">
-                    ⚠️ Coûte 300 po de diamants
-                </div>
-                <button class="btn btn-small" onclick="castSpell('revivify', false)" style="width: 100%;">
-                    💎 Lancer
-                </button>
-            </div>
-
-            <!-- Beacon of Hope -->
-            <div
-                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--info-blue);">
-                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
                     {{ character.spells.level_3.beacon_of_hope.name }}
                     <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
                     {{ character.spells.level_3.beacon_of_hope.description }}
                 </p>
-                <button class="btn btn-small btn-info" onclick="castSpell('beacon_of_hope', false)"
+                <button class="btn btn-small btn-success" onclick="castSpell('beacon_of_hope', false)"
                     style="width: 100%;">
-                    🏮 Lancer
+                    ✨ Lancer
+                </button>
+            </div>
+
+            <!-- Remove Curse -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 5px;">
+                    {{ character.spells.level_3.remove_curse.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.remove_curse.description }}
+                </p>
+                <button class="btn btn-small btn-info" onclick="castSpell('remove_curse', false)" style="width: 100%;">
+                    🔓 Lancer
+                </button>
+            </div>
+
+            <!-- Revivify -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-orange);">
+                <h4 style="color: var(--warning-orange); margin-bottom: 5px;">
+                    {{ character.spells.level_3.revivify.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.revivify.description }}
+                </p>
+                <button class="btn btn-small btn-warning" onclick="castSpell('revivify', false)" style="width: 100%;">
+                    💎 Lancer (300 PO)
+                </button>
+            </div>
+
+            <!-- Aura of Vitality -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_3.aura_of_vitality.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.aura_of_vitality.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('aura_of_vitality', false)"
+                    style="width: 100%;">
+                    💚 Lancer
+                </button>
+            </div>
+
+            <!-- Magic Circle -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_3.magic_circle.name }}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_3.magic_circle.description }}
+                </p>
+                <button class="btn btn-small" onclick="castSpell('magic_circle', false)" style="width: 100%;">
+                    ⭕ Lancer (100 PO)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorts Niveau 4 -->
+    <div class="stat-card">
+        <h2 class="card-title">Sorts de Niveau 4</h2>
+        <div class="card-content">
+            <!-- Aura of Life -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--success-green);">
+                <h4 style="color: var(--success-green); margin-bottom: 5px;">
+                    {{ character.spells.level_4.aura_of_life.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_4.aura_of_life.description }}
+                </p>
+                <button class="btn btn-small btn-success" onclick="castSpell('aura_of_life', false)"
+                    style="width: 100%;">
+                    💚 Lancer
+                </button>
+            </div>
+
+            <!-- Guardian of Faith -->
+            <div
+                style="background: var(--dark-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin-bottom: 5px;">
+                    {{ character.spells.level_4.guardian_of_faith.name }}
+                    <span style="font-size: 0.7rem; color: var(--secondary-gold);">(SERMENT)</span>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                    {{ character.spells.level_4.guardian_of_faith.description }}
+                </p>
+                <button class="btn btn-small" onclick="castSpell('guardian_of_faith', false)" style="width: 100%;">
+                    👼 Lancer
                 </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
     // Fonction pour lancer un cantrip
     function castCantrip(cantripName) {
         showDiceResult(`
-        <h3>Cantrip - Light</h3>
-        <div class="dice-roll" style="color: var(--primary-gold);">
-            ✨ Lumière créée!
-        </div>
+        <h3>🌟 ${cantripName.charAt(0).toUpperCase() + cantripName.slice(1)}</h3>
         <div>Objet touché émet une lumière vive (20 pieds) pendant 1 heure</div>
         <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
             Les cantrips n'utilisent pas d'emplacements de sorts
@@ -346,10 +451,8 @@
         const slots = document.querySelectorAll(`[data-level="${level}"]`);
         slots.forEach((slot, index) => {
             if (index < remaining) {
-                // Slot disponible
                 slot.style.background = getSlotColor(level);
             } else {
-                // Slot utilisé
                 slot.style.background = 'transparent';
             }
         });
@@ -361,6 +464,7 @@
             case 1: return 'var(--primary-gold)';
             case 2: return 'var(--info-blue)';
             case 3: return 'var(--warning-orange)';
+            case 4: return 'var(--danger-red)';
             default: return 'var(--text-light)';
         }
     }
@@ -371,7 +475,6 @@
         if (slotElement) {
             slotElement.textContent = remaining;
 
-            // Animation de mise à jour
             slotElement.style.transform = 'scale(1.2)';
             slotElement.style.color = remaining > 0 ? getSlotColor(level) : 'var(--danger-red)';
             setTimeout(() => {
@@ -380,20 +483,16 @@
             }, 200);
         }
 
-        // Mettre à jour l'affichage visuel des slots
         updateSpellSlotsVisual(level, remaining);
 
-        // Mettre à jour aussi dans la navigation si elle existe
         const navSlotElement = document.getElementById(`nav-spell-slots-${level}`);
         if (navSlotElement) {
             navSlotElement.textContent = remaining;
         }
     }
 
-    // Test au chargement
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('Page Sorts chargée');
-        console.log('Fonctions disponibles:', typeof castSpell, typeof updateSpellSlots);
+        console.log('Page Sorts chargée - Niveau 4 disponible');
     });
 </script>
 {% endblock %}
