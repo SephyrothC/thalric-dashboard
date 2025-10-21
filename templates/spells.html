@@ -54,22 +54,23 @@
     </div>
 </div>
 
-<div class="stats-grid">
-    <!-- Emplacements de sorts -->
-    <div class="stat-card">
-        <h2 class="card-title">💎 Emplacements de Sorts</h2>
-        <div class="card-content">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="color: var(--secondary-gold); font-size: 1rem; margin-bottom: 15px;">
-                    <strong>Capacité de sorts: Charisme</strong>
-                </div>
-                <button onclick="restoreAllSlots()" class="btn btn-success" style="width: 100%;">
-                    ⚡ Repos Long - Restaurer Tous les Emplacements
-                </button>
+<!-- Emplacements de sorts en horizontal -->
+<div style="background: var(--medium-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid var(--border-color);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--primary-gold); margin: 0;">💎 Emplacements de Sorts</h2>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="color: var(--secondary-gold); font-size: 0.9rem;">
+                <strong>Capacité: Charisme</strong>
             </div>
+            <button onclick="restoreAllSlots()" class="btn btn-success">
+                ⚡ Repos Long
+            </button>
+        </div>
+    </div>
 
-            <!-- Niveau 1 -->
-            <div class="spell-slot-container" data-level="1">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <!-- Niveau 1 -->
+        <div class="spell-slot-container-horizontal" data-level="1">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.1rem;">Niveau 1</h3>
                     <div style="font-size: 1.2rem;">
@@ -93,8 +94,8 @@
                 </div>
             </div>
 
-            <!-- Niveau 2 -->
-            <div class="spell-slot-container" data-level="2">
+        <!-- Niveau 2 -->
+        <div class="spell-slot-container-horizontal" data-level="2">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <h3 style="color: var(--info-blue); margin: 0; font-size: 1.1rem;">Niveau 2</h3>
                     <div style="font-size: 1.2rem;">
@@ -118,8 +119,8 @@
                 </div>
             </div>
 
-            <!-- Niveau 3 -->
-            <div class="spell-slot-container" data-level="3">
+        <!-- Niveau 3 -->
+        <div class="spell-slot-container-horizontal" data-level="3">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <h3 style="color: var(--warning-orange); margin: 0; font-size: 1.1rem;">Niveau 3</h3>
                     <div style="font-size: 1.2rem;">
@@ -143,8 +144,8 @@
                 </div>
             </div>
 
-            <!-- Niveau 4 -->
-            <div class="spell-slot-container" data-level="4">
+        <!-- Niveau 4 -->
+        <div class="spell-slot-container-horizontal" data-level="4">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <h3 style="color: var(--danger-red); margin: 0; font-size: 1.1rem;">Niveau 4</h3>
                     <div style="font-size: 1.2rem;">
@@ -167,24 +168,25 @@
                     {% endfor %}
                 </div>
             </div>
-
-            <!-- Contrôles niveau de sort -->
-            <div style="margin-top: 20px; text-align: center;">
-                <label style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <span style="color: var(--text-light);">Lancer au niveau:</span>
-                    <select id="spell-level-select"
-                        style="background: var(--medium-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 8px; border-radius: 4px; font-size: 1rem;">
-                        <option value="1">Niveau 1</option>
-                        <option value="2">Niveau 2</option>
-                        <option value="3">Niveau 3</option>
-                        <option value="4">Niveau 4</option>
-                    </select>
-                </label>
-            </div>
-        </div>
     </div>
 
-    <!-- Tous les sorts -->
+    <!-- Contrôles niveau de sort -->
+    <div style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 2px solid var(--border-color);">
+        <label style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <span style="color: var(--text-light); font-weight: bold;">Lancer au niveau:</span>
+            <select id="spell-level-select"
+                style="background: var(--dark-bg); border: 2px solid var(--primary-gold); color: var(--text-light); padding: 10px 20px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+                <option value="1">Niveau 1</option>
+                <option value="2">Niveau 2</option>
+                <option value="3">Niveau 3</option>
+                <option value="4">Niveau 4</option>
+            </select>
+        </label>
+    </div>
+</div>
+
+<!-- Tous les sorts -->
+<div class="stats-grid">
     <div class="stat-card" style="grid-column: 1 / -1;">
         <h2 class="card-title">📖 Liste des Sorts</h2>
         <div class="card-content">
@@ -398,11 +400,18 @@
     letter-spacing: 1px;
 }
 
-.spell-slot-container {
+.spell-slot-container-horizontal {
     background: var(--dark-bg);
     padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.spell-slot-container-horizontal:hover {
+    border-color: var(--primary-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 .slot-progress-bar {
@@ -645,6 +654,8 @@ function updateAvailableSlots() {
 
 // Override de la fonction updateSpellSlots pour inclure les barres de progression
 function updateSpellSlots(level, remaining) {
+    console.log(`Updating spell slots: level ${level}, remaining ${remaining}`);
+
     const slotElement = document.getElementById(`spell-slots-${level}`);
     if (slotElement) {
         slotElement.textContent = remaining;
@@ -660,10 +671,12 @@ function updateSpellSlots(level, remaining) {
     // Mettre à jour la barre de progression
     const progressBar = document.getElementById(`progress-${level}`);
     if (progressBar) {
-        const container = progressBar.closest('.spell-slot-container');
-        const total = container.querySelectorAll('.spell-slot').length;
-        const percentage = (remaining / total) * 100;
-        progressBar.style.width = percentage + '%';
+        const container = progressBar.closest('.spell-slot-container-horizontal');
+        const total = container ? container.querySelectorAll('.spell-slot').length : 0;
+        if (total > 0) {
+            const percentage = (remaining / total) * 100;
+            progressBar.style.width = percentage + '%';
+        }
     }
 
     // Mettre à jour les slots visuels
@@ -701,17 +714,29 @@ function getSlotColor(level) {
 }
 
 function castCantrip(cantripName) {
-    const spellItem = event.target.closest('.spell-item');
-    spellItem.style.animation = 'pulse 0.5s ease';
-    setTimeout(() => spellItem.style.animation = '', 500);
+    console.log(`Casting cantrip: ${cantripName}`);
+
+    // Trouver l'élément spell-item si event est disponible
+    if (typeof event !== 'undefined' && event && event.target) {
+        const spellItem = event.target.closest('.spell-item');
+        if (spellItem) {
+            spellItem.style.animation = 'pulse 0.5s ease';
+            setTimeout(() => spellItem.style.animation = '', 500);
+        }
+    }
+
+    const displayName = cantripName.charAt(0).toUpperCase() + cantripName.slice(1);
 
     showDiceResult(`
-        <h3>🌟 ${cantripName.charAt(0).toUpperCase() + cantripName.slice(1)}</h3>
+        <h3>🌟 ${displayName}</h3>
         <div>Objet touché émet une lumière vive (20 pieds) pendant 1 heure</div>
         <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
             Les cantrips n'utilisent pas d'emplacements de sorts
         </div>
     `);
+
+    // Enregistrer dans les statistiques si possible
+    showToast(`${displayName} lancé`, 'success');
 }
 
 // Event listeners

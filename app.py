@@ -478,26 +478,40 @@ def weapon_attack():
 
 @app.route('/api/cast_spell', methods=['POST'])
 def cast_spell():
-    data = request.json
-    spell_name = data.get('spell')
-    spell_level = data.get('level', 1)
-    is_attack_spell = data.get('is_attack', False)
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'Aucune donnée reçue'}), 400
 
-    character_data = load_character_data()
+        spell_name = data.get('spell')
+        if not spell_name:
+            return jsonify({'error': 'Nom du sort manquant'}), 400
 
-    # Déterminer le niveau minimum du sort
-    spell_min_level = 1
+        spell_level = data.get('level', 1)
+        is_attack_spell = data.get('is_attack', False)
 
-    for level_key, spells in character_data['spells'].items():
-        if level_key == 'cantrips':
-            continue
-        if level_key.startswith('level_'):
-            level_num = int(level_key.split('_')[1])
-            if spell_name in spells:
-                spell_min_level = level_num
-                break
+        print(f"🔮 Cast spell: {spell_name}, level: {spell_level}, attack: {is_attack_spell}")
 
-    effective_level = max(spell_level, spell_min_level)
+        character_data = load_character_data()
+
+        # Déterminer le niveau minimum du sort
+        spell_min_level = 1
+
+        for level_key, spells in character_data['spells'].items():
+            if level_key == 'cantrips':
+                continue
+            if level_key.startswith('level_'):
+                level_num = int(level_key.split('_')[1])
+                if spell_name in spells:
+                    spell_min_level = level_num
+                    break
+
+        effective_level = max(spell_level, spell_min_level)
+    except Exception as e:
+        print(f"❌ Erreur dans cast_spell: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
 
     current_slots = character_data['spellcasting']['spell_slots_current'].get(
         str(effective_level), 0)
