@@ -33,7 +33,7 @@
         <nav class="main-nav">
             <a href="{{ url_for('state') }}" class="nav-item {% if request.endpoint == 'state' %}active{% endif %}">
                 <span class="nav-icon">📊</span>
-                <span class="nav-text">Statistiques</span>
+                <span class="nav-text">Stats</span>
             </a>
             <a href="{{ url_for('combat') }}" class="nav-item {% if request.endpoint == 'combat' %}active{% endif %}">
                 <span class="nav-icon">⚔️</span>
@@ -50,6 +50,14 @@
             <a href="{{ url_for('inventory') }}" class="nav-item {% if request.endpoint == 'inventory' %}active{% endif %}">
                 <span class="nav-icon">🎒</span>
                 <span class="nav-text">Inventaire</span>
+            </a>
+            <a href="{{ url_for('statistics') }}" class="nav-item {% if request.endpoint == 'statistics' %}active{% endif %}">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">Graphiques</span>
+            </a>
+            <a href="{{ url_for('manage') }}" class="nav-item {% if request.endpoint == 'manage' %}active{% endif %}">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Gestion</span>
             </a>
         </nav>
 

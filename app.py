@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 from flask_socketio import SocketIO, emit
 import json
 import random
+import os
 from datetime import datetime
+from pathlib import Path
+from backup_manager import BackupManager
+from stats_manager import StatsManager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thalric_dice_secret_key'
@@ -11,19 +15,149 @@ app.config['SECRET_KEY'] = 'thalric_dice_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*",
                     logger=True, engineio_logger=True)
 
-# Charger les données du personnage
+# Initialiser les gestionnaires
+backup_manager = BackupManager()
+stats_manager = StatsManager()
 
+# Fichier du personnage actif
+CURRENT_CHARACTER_FILE = 'current_character.txt'
+CHARACTERS_DIR = Path('characters')
 
-def load_character_data():
-    with open('thalric_data.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
+# ============================================================================
+# GESTION MULTI-PERSONNAGES
+# ============================================================================
 
-# Sauvegarder les données du personnage
+def get_current_character_file():
+    """Retourne le nom du fichier du personnage actif"""
+    try:
+        if os.path.exists(CURRENT_CHARACTER_FILE):
+            with open(CURRENT_CHARACTER_FILE, 'r') as f:
+                return f.read().strip()
+    except:
+        pass
+    return 'thalric_data.json'
 
+def set_current_character_file(filename):
+    """Définit le personnage actif"""
+    with open(CURRENT_CHARACTER_FILE, 'w') as f:
+        f.write(filename)
 
-def save_character_data(data):
-    with open('thalric_data.json', 'w', encoding='utf-8') as f:
+def load_character_data(character_file=None):
+    """Charge les données d'un personnage"""
+    if character_file is None:
+        character_file = get_current_character_file()
+
+    try:
+        with open(character_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Si le fichier n'existe pas, créer un personnage par défaut
+        return create_default_character()
+
+def save_character_data(data, character_file=None, create_backup=True):
+    """Sauvegarde les données d'un personnage"""
+    if character_file is None:
+        character_file = get_current_character_file()
+
+    # Créer un backup automatique avant de sauvegarder
+    if create_backup and os.path.exists(character_file):
+        backup_manager.create_backup('auto')
+
+    with open(character_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+def create_default_character():
+    """Crée un personnage par défaut"""
+    return {
+        "character_info": {
+            "name": "Nouveau Personnage",
+            "level": 1,
+            "class": "Guerrier",
+            "subclass": "",
+            "race": "Humain",
+            "subrace": "",
+            "background": "Soldat"
+        },
+        "stats": {
+            "strength": 10,
+            "dexterity": 10,
+            "constitution": 10,
+            "intelligence": 10,
+            "wisdom": 10,
+            "charisma": 10,
+            "proficiency_bonus": 2,
+            "ac": 10,
+            "hp_max": 10,
+            "hp_current": 10,
+            "speed": 30,
+            "passive_perception": 10
+        },
+        "saving_throws": {
+            "strength": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "charisma": 0
+        },
+        "skills": {},
+        "weapons": {},
+        "armor": {},
+        "magic_items": {},
+        "spellcasting": {
+            "spell_save_dc": 10,
+            "spell_attack_bonus": 0,
+            "spell_slots": {},
+            "spell_slots_current": {}
+        },
+        "spells": {
+            "cantrips": [],
+            "level_1": [],
+            "level_2": [],
+            "level_3": []
+        },
+        "features": {},
+        "inventory": {
+            "currency": {
+                "copper": 0,
+                "silver": 0,
+                "electrum": 0,
+                "gold": 0,
+                "platinum": 0
+            },
+            "notes": ""
+        }
+    }
+
+def list_characters():
+    """Liste tous les personnages disponibles"""
+    characters = []
+
+    # Créer le dossier characters s'il n'existe pas
+    CHARACTERS_DIR.mkdir(exist_ok=True)
+
+    # Personnage principal
+    if os.path.exists('thalric_data.json'):
+        characters.append({
+            'filename': 'thalric_data.json',
+            'name': 'Thalric Cœur d\'Argent',
+            'is_main': True
+        })
+
+    # Autres personnages dans le dossier characters
+    for char_file in CHARACTERS_DIR.glob('*.json'):
+        try:
+            with open(char_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                characters.append({
+                    'filename': str(char_file),
+                    'name': data.get('character_info', {}).get('name', char_file.stem),
+                    'is_main': False
+                })
+        except:
+            continue
+
+    return characters
 
 # Calculer le modificateur d'une stat
 
@@ -76,6 +210,16 @@ def broadcast_dice_result(dice_data):
         'damage_type': dice_data.get('damage_type', ''),
         'animation_class': get_animation_class(dice_data)
     }
+
+    # Enregistrer dans les statistiques
+    stats_manager.record_roll({
+        'roll_type': dice_data.get('roll_type', 'Jet de dé'),
+        'formula': dice_data.get('formula', ''),
+        'result': dice_data.get('result', 0),
+        'critical': dice_data.get('critical', False),
+        'fumble': dice_data.get('fumble', False),
+        'damage_type': dice_data.get('damage_type', '')
+    })
 
     # Diffuser à tous les clients connectés
     socketio.emit('new_dice_roll', formatted_data)
@@ -633,8 +777,279 @@ def get_feature_uses():
     })
 
 
+# ============================================================================
+# API BACKUP MANAGEMENT
+# ============================================================================
+
+@app.route('/api/backups/list', methods=['GET'])
+def list_backups():
+    """Liste tous les backups disponibles"""
+    backups = backup_manager.list_backups()
+    total_size = backup_manager.get_total_backup_size()
+    return jsonify({
+        'backups': backups,
+        'total_size': total_size,
+        'count': len(backups)
+    })
+
+@app.route('/api/backups/create', methods=['POST'])
+def create_backup():
+    """Crée un nouveau backup manuel"""
+    data = request.json
+    label = data.get('label', 'manual')
+    filename = backup_manager.create_backup(label)
+    return jsonify({
+        'success': filename is not None,
+        'filename': filename
+    })
+
+@app.route('/api/backups/restore', methods=['POST'])
+def restore_backup():
+    """Restaure un backup"""
+    data = request.json
+    filename = data.get('filename')
+    success = backup_manager.restore_backup(filename)
+    return jsonify({'success': success})
+
+@app.route('/api/backups/delete', methods=['POST'])
+def delete_backup():
+    """Supprime un backup"""
+    data = request.json
+    filename = data.get('filename')
+    success = backup_manager.delete_backup(filename)
+    return jsonify({'success': success})
+
+@app.route('/api/backups/download/<filename>', methods=['GET'])
+def download_backup(filename):
+    """Télécharge un backup"""
+    backup_path = backup_manager.backup_dir / filename
+    if backup_path.exists():
+        return send_file(backup_path, as_attachment=True)
+    return jsonify({'error': 'Backup non trouvé'}), 404
+
+# ============================================================================
+# API STATISTICS
+# ============================================================================
+
+@app.route('/api/stats/summary', methods=['GET'])
+def get_stats_summary():
+    """Retourne le résumé des statistiques"""
+    summary = stats_manager.get_summary()
+    return jsonify(summary)
+
+@app.route('/api/stats/distribution', methods=['GET'])
+def get_roll_distribution():
+    """Retourne la distribution des jets de d20"""
+    distribution = stats_manager.get_roll_distribution()
+    return jsonify(distribution)
+
+@app.route('/api/stats/by_type', methods=['GET'])
+def get_stats_by_type():
+    """Retourne les stats par type de jet"""
+    stats = stats_manager.get_stats_by_type()
+    return jsonify(stats)
+
+@app.route('/api/stats/recent', methods=['GET'])
+def get_recent_rolls():
+    """Retourne les jets récents"""
+    limit = request.args.get('limit', 20, type=int)
+    rolls = stats_manager.get_recent_rolls(limit)
+    return jsonify({'rolls': rolls})
+
+@app.route('/api/stats/by_period', methods=['GET'])
+def get_stats_by_period():
+    """Retourne les stats par période"""
+    days = request.args.get('days', 7, type=int)
+    stats = stats_manager.get_rolls_by_period(days)
+    return jsonify(stats)
+
+@app.route('/api/stats/clear', methods=['POST'])
+def clear_stats():
+    """Efface toutes les statistiques"""
+    stats_manager.clear_stats()
+    return jsonify({'success': True})
+
+@app.route('/api/stats/export', methods=['GET'])
+def export_stats():
+    """Exporte les statistiques"""
+    stats = stats_manager.export_stats()
+    return jsonify(stats)
+
+# ============================================================================
+# API MULTI-CHARACTERS
+# ============================================================================
+
+@app.route('/api/characters/list', methods=['GET'])
+def api_list_characters():
+    """Liste tous les personnages"""
+    characters = list_characters()
+    current = get_current_character_file()
+    return jsonify({
+        'characters': characters,
+        'current': current
+    })
+
+@app.route('/api/characters/switch', methods=['POST'])
+def switch_character():
+    """Change de personnage actif"""
+    data = request.json
+    filename = data.get('filename')
+
+    if not filename or not os.path.exists(filename):
+        return jsonify({'error': 'Personnage introuvable'}), 404
+
+    set_current_character_file(filename)
+    character_data = load_character_data(filename)
+
+    return jsonify({
+        'success': True,
+        'character': character_data.get('character_info', {})
+    })
+
+@app.route('/api/characters/create', methods=['POST'])
+def create_character():
+    """Crée un nouveau personnage"""
+    data = request.json
+    name = data.get('name', 'Nouveau Personnage')
+
+    # Créer le personnage
+    character_data = create_default_character()
+    character_data['character_info']['name'] = name
+
+    # Générer un nom de fichier sûr
+    safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).strip()
+    safe_name = safe_name.replace(' ', '_').lower()
+    filename = CHARACTERS_DIR / f"{safe_name}.json"
+
+    # S'assurer que le fichier n'existe pas déjà
+    counter = 1
+    while filename.exists():
+        filename = CHARACTERS_DIR / f"{safe_name}_{counter}.json"
+        counter += 1
+
+    # Sauvegarder
+    save_character_data(character_data, str(filename), create_backup=False)
+
+    return jsonify({
+        'success': True,
+        'filename': str(filename),
+        'character': character_data.get('character_info', {})
+    })
+
+@app.route('/api/characters/delete', methods=['POST'])
+def delete_character():
+    """Supprime un personnage"""
+    data = request.json
+    filename = data.get('filename')
+
+    # Ne pas permettre de supprimer le personnage principal
+    if filename == 'thalric_data.json':
+        return jsonify({'error': 'Impossible de supprimer le personnage principal'}), 400
+
+    try:
+        if os.path.exists(filename):
+            os.remove(filename)
+            return jsonify({'success': True})
+        return jsonify({'error': 'Personnage introuvable'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================================
+# API IMPORT/EXPORT
+# ============================================================================
+
+@app.route('/api/export', methods=['GET'])
+def export_character():
+    """Exporte le personnage actuel"""
+    character_data = load_character_data()
+    return jsonify(character_data)
+
+@app.route('/api/import', methods=['POST'])
+def import_character():
+    """Importe un personnage"""
+    try:
+        data = request.json
+
+        # Valider la structure minimale
+        if not isinstance(data, dict) or 'character_info' not in data:
+            return jsonify({'error': 'Format de personnage invalide'}), 400
+
+        # Créer un backup avant d'importer
+        backup_manager.create_backup('pre_import')
+
+        # Sauvegarder
+        save_character_data(data, create_backup=False)
+
+        return jsonify({
+            'success': True,
+            'character': data.get('character_info', {})
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/import/file', methods=['POST'])
+def import_character_file():
+    """Importe un personnage depuis un fichier"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Aucun fichier fourni'}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'error': 'Nom de fichier vide'}), 400
+
+        # Lire le contenu
+        content = file.read().decode('utf-8')
+        data = json.loads(content)
+
+        # Valider
+        if not isinstance(data, dict) or 'character_info' not in data:
+            return jsonify({'error': 'Format de personnage invalide'}), 400
+
+        # Créer un backup
+        backup_manager.create_backup('pre_import')
+
+        # Sauvegarder
+        save_character_data(data, create_backup=False)
+
+        return jsonify({
+            'success': True,
+            'character': data.get('character_info', {})
+        })
+
+    except json.JSONDecodeError:
+        return jsonify({'error': 'Fichier JSON invalide'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================================
+# ROUTES PAGES
+# ============================================================================
+
+@app.route('/manage')
+def manage():
+    """Page de gestion (backups, personnages, stats)"""
+    data = load_character_data()
+    return render_template('manage.html', character=data)
+
+@app.route('/statistics')
+def statistics():
+    """Page de statistiques avec graphiques"""
+    data = load_character_data()
+    return render_template('statistics.html', character=data)
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
 if __name__ == '__main__':
     import os
+
+    # Créer les dossiers nécessaires
+    CHARACTERS_DIR.mkdir(exist_ok=True)
+    backup_manager.backup_dir.mkdir(exist_ok=True)
 
     host = os.getenv('FLASK_HOST', '0.0.0.0')
     port = int(os.getenv('FLASK_PORT', 5000))
@@ -643,6 +1058,8 @@ if __name__ == '__main__':
     print(f"🐲 Démarrage de Thalric Dashboard avec WebSocket...")
     print(f"🌐 Dashboard : http://{host}:{port}")
     print(f"📱 Visionneur : http://{host}:{port}/dice-viewer")
+    print(f"📊 Statistiques : http://{host}:{port}/statistics")
+    print(f"⚙️  Gestion : http://{host}:{port}/manage")
     print(f"🔧 Mode debug : {debug}")
 
     # Utiliser socketio.run au lieu de app.run
