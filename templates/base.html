@@ -67,7 +67,57 @@
         </div>
     </div>
 
+    <!-- Toggle de thème -->
+    <div class="theme-toggle" onclick="toggleTheme()" title="Changer le thème (T)">
+        <span class="theme-toggle-icon">🌙</span>
+    </div>
+
+    <!-- Historique des dés -->
+    <div class="history-toggle" onclick="toggleHistory()" title="Historique des dés (H)">
+        <span class="history-toggle-icon">📜</span>
+        <span class="history-badge" style="display: none;">0</span>
+    </div>
+
+    <div class="dice-history">
+        <div class="history-header">
+            <span class="history-title">Historique des Jets</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-small btn-danger" onclick="clearHistory()" title="Effacer l'historique">🗑️</button>
+                <span class="history-close" onclick="toggleHistory()">×</span>
+            </div>
+        </div>
+        <div class="history-content">
+            <!-- Les items d'historique seront ajoutés dynamiquement -->
+        </div>
+    </div>
+
+    <!-- Aide des raccourcis clavier -->
+    <div class="shortcuts-help">
+        <div class="shortcuts-title">Raccourcis Clavier</div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Historique</span>
+            <span class="shortcut-key">H</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Changer thème</span>
+            <span class="shortcut-key">T</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Sons on/off</span>
+            <span class="shortcut-key">S</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Cette aide</span>
+            <span class="shortcut-key">?</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Fermer/Échap</span>
+            <span class="shortcut-key">ESC</span>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

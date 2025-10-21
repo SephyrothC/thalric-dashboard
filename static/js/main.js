@@ -5,6 +5,251 @@ let radiantSoulActive = false; // État de Radiant Soul
 // WebSocket pour diffusion des dés
 let diceSocket = null;
 
+// Historique des jets de dés (persistant)
+let diceHistory = JSON.parse(localStorage.getItem('diceHistory')) || [];
+const MAX_HISTORY_ITEMS = 50;
+
+// Système de thème
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+// Son activé/désactivé
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+// === SYSTÈME DE SONS ===
+const DiceSounds = {
+    critical: () => playSound(800, 0.2, 'square', [
+        {freq: 800, time: 0},
+        {freq: 1200, time: 0.1},
+        {freq: 1600, time: 0.15}
+    ]),
+    fumble: () => playSound(200, 0.3, 'sawtooth', [
+        {freq: 400, time: 0},
+        {freq: 200, time: 0.15}
+    ]),
+    success: () => playSound(600, 0.15, 'sine'),
+    click: () => playSound(400, 0.05, 'sine')
+};
+
+function playSound(frequency, duration, type = 'sine', sequence = null) {
+    if (!soundEnabled) return;
+
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+
+        if (sequence) {
+            sequence.forEach(step => {
+                oscillator.frequency.setValueAtTime(step.freq, audioContext.currentTime + step.time);
+            });
+        }
+
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) {
+        console.warn('Audio non disponible:', e);
+    }
+}
+
+// === SYSTÈME DE NOTIFICATIONS TOAST ===
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.querySelector('.toast-container') || createToastContainer();
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icons = {
+        success: '✓',
+        error: '✗',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-header">
+            <span class="toast-title">${icons[type] || icons.info} ${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+            <span class="toast-close" onclick="this.parentElement.parentElement.remove()">×</span>
+        </div>
+        <div class="toast-message">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+// === SYSTÈME DE THÈME ===
+function initTheme() {
+    if (currentTheme === 'light') {
+        document.body.classList.add('light-theme');
+    }
+}
+
+function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', currentTheme);
+
+    const icon = document.querySelector('.theme-toggle-icon');
+    if (icon) {
+        icon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+    }
+
+    showToast(`Mode ${currentTheme === 'dark' ? 'sombre' : 'clair'} activé`, 'success', 2000);
+}
+
+// === SYSTÈME D'HISTORIQUE DES DÉS ===
+function addToDiceHistory(rollData) {
+    const historyItem = {
+        ...rollData,
+        id: Date.now(),
+        timestamp: new Date().toLocaleTimeString('fr-FR')
+    };
+
+    diceHistory.unshift(historyItem);
+
+    // Limiter l'historique
+    if (diceHistory.length > MAX_HISTORY_ITEMS) {
+        diceHistory = diceHistory.slice(0, MAX_HISTORY_ITEMS);
+    }
+
+    localStorage.setItem('diceHistory', JSON.stringify(diceHistory));
+    updateHistoryDisplay();
+    updateHistoryBadge();
+}
+
+function updateHistoryDisplay() {
+    const historyContent = document.querySelector('.history-content');
+    if (!historyContent) return;
+
+    historyContent.innerHTML = diceHistory.slice(0, 20).map(item => `
+        <div class="history-item ${item.critical ? 'critical' : ''} ${item.fumble ? 'fumble' : ''}">
+            <div class="history-item-type">${item.roll_type || 'Jet de dé'}</div>
+            <div class="history-item-result">
+                ${item.formula ? item.formula + ' = ' : ''}${item.result}
+            </div>
+            ${item.details ? `<div style="font-size: 0.8rem; color: var(--text-muted);">${item.details}</div>` : ''}
+            <div class="history-item-time">${item.timestamp}</div>
+        </div>
+    `).join('');
+}
+
+function toggleHistory() {
+    const history = document.querySelector('.dice-history');
+    if (history) {
+        history.classList.toggle('open');
+        if (history.classList.contains('open')) {
+            updateHistoryDisplay();
+        }
+    }
+}
+
+function clearHistory() {
+    if (confirm('Effacer tout l\'historique des jets de dés ?')) {
+        diceHistory = [];
+        localStorage.setItem('diceHistory', JSON.stringify(diceHistory));
+        updateHistoryDisplay();
+        updateHistoryBadge();
+        showToast('Historique effacé', 'success');
+    }
+}
+
+function updateHistoryBadge() {
+    const badge = document.querySelector('.history-badge');
+    if (badge) {
+        const count = diceHistory.length;
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+}
+
+// === RACCOURCIS CLAVIER ===
+const KEYBOARD_SHORTCUTS = {
+    'h': () => toggleHistory(),
+    '?': () => toggleShortcutsHelp(),
+    't': () => toggleTheme(),
+    's': () => toggleSound(),
+    'Escape': () => {
+        closeDiceResult();
+        closeHistory();
+        closeShortcutsHelp();
+    }
+};
+
+function handleKeyboardShortcut(event) {
+    // Ignorer si on est dans un input
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    const shortcut = KEYBOARD_SHORTCUTS[event.key];
+    if (shortcut) {
+        event.preventDefault();
+        shortcut();
+    }
+}
+
+function toggleShortcutsHelp() {
+    const help = document.querySelector('.shortcuts-help');
+    if (help) {
+        help.classList.toggle('open');
+    }
+}
+
+function closeShortcutsHelp() {
+    const help = document.querySelector('.shortcuts-help');
+    if (help) {
+        help.classList.remove('open');
+    }
+}
+
+function closeHistory() {
+    const history = document.querySelector('.dice-history');
+    if (history) {
+        history.classList.remove('open');
+    }
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem('soundEnabled', soundEnabled);
+    showToast(`Sons ${soundEnabled ? 'activés' : 'désactivés'}`, 'info', 2000);
+    if (soundEnabled) {
+        DiceSounds.click();
+    }
+}
+
+// === LOADING STATES ===
+function setLoading(element, isLoading) {
+    if (isLoading) {
+        element.classList.add('loading');
+        element.disabled = true;
+    } else {
+        element.classList.remove('loading');
+        element.disabled = false;
+    }
+}
+
 // === INITIALISATION WEBSOCKET ===
 function initDiceWebSocket() {
     // Ne pas initialiser WebSocket sur la page viewer
@@ -27,21 +272,34 @@ function initDiceWebSocket() {
 }
 
 // === UTILITAIRES ===
-function showDiceResult(result) {
+function showDiceResult(result, rollData = null) {
     const resultsDiv = document.getElementById('dice-results');
     const resultText = document.getElementById('result-text');
-    
+
     resultText.innerHTML = result;
     resultsDiv.style.display = 'flex';
     resultsDiv.classList.add('fade-in');
-    
+
+    // Ajouter à l'historique si des données sont fournies
+    if (rollData) {
+        addToDiceHistory(rollData);
+
+        // Jouer le son approprié
+        if (rollData.critical) {
+            DiceSounds.critical();
+        } else if (rollData.fumble) {
+            DiceSounds.fumble();
+        } else {
+            DiceSounds.success();
+        }
+    }
+
     // Extraire et diffuser les données si WebSocket disponible
     if (diceSocket && diceSocket.connected) {
         try {
-            const rollData = extractRollDataFromResult(result);
-            if (rollData) {
-                // Les données seront diffusées par les API endpoints modifiées
-                console.log('🎲 Données extraites pour diffusion:', rollData);
+            const extractedData = rollData || extractRollDataFromResult(result);
+            if (extractedData) {
+                console.log('🎲 Données extraites pour diffusion:', extractedData);
             }
         } catch (error) {
             console.error('Erreur extraction données dé:', error);
@@ -82,7 +340,12 @@ function formatBonus(bonus) {
     return bonus >= 0 ? `+${bonus}` : `${bonus}`;
 }
 
-function makeRequest(url, data, callback) {
+function makeRequest(url, data, callback, loadingElement = null) {
+    // Activer le loading si un élément est fourni
+    if (loadingElement) {
+        setLoading(loadingElement, true);
+    }
+
     fetch(url, {
         method: 'POST',
         headers: {
@@ -90,20 +353,36 @@ function makeRequest(url, data, callback) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(callback)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        callback(result);
+        if (loadingElement) {
+            setLoading(loadingElement, false);
+        }
+    })
     .catch(error => {
         console.error('Erreur:', error);
-        showDiceResult('<div class="danger">Erreur de connexion</div>');
+        showDiceResult('<div class="danger">Erreur de connexion au serveur</div>');
+        showToast('Erreur de connexion', 'error');
+        if (loadingElement) {
+            setLoading(loadingElement, false);
+        }
     });
 }
 
 // === JETS DE SAUVEGARDE ===
-function rollSavingThrow(ability) {
+function rollSavingThrow(ability, event) {
+    const button = event?.target;
+
     makeRequest('/api/saving_throw', { ability: ability }, function(data) {
         let resultClass = '';
         let resultText = '';
-        
+
         if (data.critical) {
             resultClass = 'critical';
             resultText = '🎯 Critique Naturel!';
@@ -111,7 +390,7 @@ function rollSavingThrow(ability) {
             resultClass = 'fumble';
             resultText = '💀 Échec Critique!';
         }
-        
+
         const result = `
             <h3>Jet de Sauvegarde - ${ability.toUpperCase()}</h3>
             <div class="dice-roll ${resultClass}">
@@ -119,17 +398,28 @@ function rollSavingThrow(ability) {
             </div>
             ${resultText ? `<div class="${resultClass}">${resultText}</div>` : ''}
         `;
-        
-        showDiceResult(result);
-    });
+
+        const rollData = {
+            roll_type: `Sauvegarde ${ability.toUpperCase()}`,
+            formula: `1d20${formatBonus(data.bonus)}`,
+            result: data.total,
+            details: `(${data.roll} ${formatBonus(data.bonus)})`,
+            critical: data.critical,
+            fumble: data.fumble
+        };
+
+        showDiceResult(result, rollData);
+    }, button);
 }
 
 // === JETS DE COMPÉTENCES ===
-function rollSkillCheck(skill, skillName) {
+function rollSkillCheck(skill, skillName, event) {
+    const button = event?.target;
+
     makeRequest('/api/skill_check', { skill: skill }, function(data) {
         let resultClass = '';
         let resultText = '';
-        
+
         if (data.critical) {
             resultClass = 'critical';
             resultText = '🎯 Critique Naturel!';
@@ -137,7 +427,7 @@ function rollSkillCheck(skill, skillName) {
             resultClass = 'fumble';
             resultText = '💀 Échec Critique!';
         }
-        
+
         const result = `
             <h3>Test de ${skillName}</h3>
             <div class="dice-roll ${resultClass}">
@@ -145,9 +435,18 @@ function rollSkillCheck(skill, skillName) {
             </div>
             ${resultText ? `<div class="${resultClass}">${resultText}</div>` : ''}
         `;
-        
-        showDiceResult(result);
-    });
+
+        const rollData = {
+            roll_type: `Test de ${skillName}`,
+            formula: `1d20${formatBonus(data.bonus)}`,
+            result: data.total,
+            details: `(${data.roll} ${formatBonus(data.bonus)})`,
+            critical: data.critical,
+            fumble: data.fumble
+        };
+
+        showDiceResult(result, rollData);
+    }, button);
 }
 
 // === GESTION DES HP ===
@@ -687,9 +986,18 @@ function rollCustomDice() {
 
 // === ÉVÉNEMENTS ===
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser le thème
+    initTheme();
+
     // Initialiser WebSocket
     initDiceWebSocket();
-    
+
+    // Initialiser les raccourcis clavier
+    document.addEventListener('keydown', handleKeyboardShortcut);
+
+    // Mettre à jour le badge de l'historique
+    updateHistoryBadge();
+
     // Fermer les résultats en cliquant en dehors
     document.getElementById('dice-results')?.addEventListener('click', function(e) {
         if (e.target === this) {

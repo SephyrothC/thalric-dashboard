@@ -635,3 +635,431 @@ body {
         transform: translateY(0);
     }
 }
+
+.slide-in {
+    animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.pulse {
+    animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.glow {
+    animation: glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px var(--primary-gold), 0 0 10px var(--primary-gold);
+    }
+    to {
+        box-shadow: 0 0 10px var(--primary-gold), 0 0 20px var(--primary-gold), 0 0 30px var(--primary-gold);
+    }
+}
+
+/* === LOADING SPINNER === */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid var(--primary-gold);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn.loading::after {
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border-width: 2px;
+}
+
+/* === THEME TOGGLE === */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    background: var(--medium-bg);
+    border: 2px solid var(--primary-gold);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+}
+
+.theme-toggle-icon {
+    font-size: 1.5rem;
+}
+
+/* Light theme */
+body.light-theme {
+    --dark-bg: #f5f5f5;
+    --medium-bg: #ffffff;
+    --light-bg: #e8e8e8;
+    --text-light: #1a1a1a;
+    --text-muted: #666666;
+    --border-color: #cccccc;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .character-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+}
+
+body.light-theme .stat-card,
+body.light-theme .feature-card,
+body.light-theme .spell-card {
+    background: #ffffff;
+}
+
+body.light-theme .ability-score,
+body.light-theme .skill-item,
+body.light-theme .currency-item,
+body.light-theme .form-input,
+body.light-theme .inventory-notes {
+    background: #f9f9f9;
+}
+
+/* === DICE HISTORY === */
+.dice-history {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    background: var(--medium-bg);
+    border: 2px solid var(--primary-gold);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    z-index: 998;
+    display: none;
+    flex-direction: column;
+}
+
+.dice-history.open {
+    display: flex;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--light-bg);
+    border-radius: 10px 10px 0 0;
+}
+
+.history-title {
+    color: var(--primary-gold);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.history-close {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.history-close:hover {
+    color: var(--danger-red);
+}
+
+.history-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.history-item {
+    background: var(--light-bg);
+    border-left: 3px solid var(--primary-gold);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease;
+}
+
+.history-item.critical {
+    border-left-color: var(--success-green);
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.history-item.fumble {
+    border-left-color: var(--danger-red);
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.history-item-type {
+    font-weight: bold;
+    color: var(--primary-gold);
+    margin-bottom: 3px;
+}
+
+.history-item-result {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.history-item-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.history-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--medium-bg);
+    border: 2px solid var(--primary-gold);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    z-index: 997;
+}
+
+.history-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+}
+
+.history-toggle-icon {
+    font-size: 1.5rem;
+    color: var(--primary-gold);
+}
+
+.history-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--danger-red);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* === KEYBOARD SHORTCUTS HELP === */
+.shortcuts-help {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--medium-bg);
+    border: 2px solid var(--primary-gold);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+    z-index: 999;
+    display: none;
+    max-width: 300px;
+}
+
+.shortcuts-help.open {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+.shortcuts-title {
+    color: var(--primary-gold);
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.shortcut-item:last-child {
+    border-bottom: none;
+}
+
+.shortcut-key {
+    background: var(--light-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--primary-gold);
+    font-weight: bold;
+}
+
+.shortcut-desc {
+    color: var(--text-muted);
+}
+
+/* === TOAST NOTIFICATIONS === */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--medium-bg);
+    border-left: 4px solid var(--primary-gold);
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 250px;
+    max-width: 400px;
+    animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+    border-left-color: var(--success-green);
+}
+
+.toast.error {
+    border-left-color: var(--danger-red);
+}
+
+.toast.warning {
+    border-left-color: var(--warning-orange);
+}
+
+.toast.info {
+    border-left-color: var(--info-blue);
+}
+
+.toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.toast-title {
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.toast-close {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: var(--danger-red);
+}
+
+.toast-message {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* === RESPONSIVE ADDITIONS === */
+@media (max-width: 768px) {
+    .theme-toggle,
+    .history-toggle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .theme-toggle-icon,
+    .history-toggle-icon {
+        font-size: 1.2rem;
+    }
+
+    .dice-history {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+    }
+
+    .shortcuts-help {
+        width: calc(100% - 40px);
+        left: 20px;
+    }
+
+    .toast-container {
+        right: 10px;
+        left: 10px;
+    }
+
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
+}
