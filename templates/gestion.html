@@ -1,0 +1,843 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion - {{ super() }}{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center; color: var(--primary-gold); margin-bottom: 20px;">⚙️ Gestion & Statistiques</h1>
+
+<!-- ONGLETS -->
+<div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px;">
+    <button id="tab-stats" class="tab-btn active" onclick="switchTab('stats')">
+        📊 Statistiques
+    </button>
+    <button id="tab-manage" class="tab-btn" onclick="switchTab('manage')">
+        ⚙️ Gestion
+    </button>
+</div>
+
+<!-- SECTION STATISTIQUES -->
+<div id="section-stats" class="tab-content active">
+    <div class="stats-grid">
+        <!-- RÉSUMÉ GÉNÉRAL -->
+        <div class="stat-card">
+            <h2 class="card-title">📈 Résumé Général</h2>
+            <div class="card-content" id="summary-content">
+                <p style="text-align: center; color: var(--text-muted);">Chargement...</p>
+            </div>
+        </div>
+
+        <!-- DISTRIBUTION DES JETS DE D20 -->
+        <div class="stat-card" style="grid-column: span 2;">
+            <h2 class="card-title">🎲 Distribution des Jets de d20</h2>
+            <div class="card-content">
+                <canvas id="distribution-chart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- STATISTIQUES PAR TYPE -->
+        <div class="stat-card" style="grid-column: span 2;">
+            <h2 class="card-title">📋 Statistiques par Type de Jet</h2>
+            <div class="card-content">
+                <div id="stats-by-type" style="max-height: 400px; overflow-y: auto;">
+                    <p style="text-align: center; color: var(--text-muted);">Chargement...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVITÉ SUR 7 JOURS -->
+        <div class="stat-card" style="grid-column: span 2;">
+            <h2 class="card-title">📅 Activité des 7 Derniers Jours</h2>
+            <div class="card-content">
+                <canvas id="activity-chart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+
+        <!-- JETS RÉCENTS -->
+        <div class="stat-card" style="grid-column: span 2;">
+            <h2 class="card-title">🕐 Jets Récents (20 derniers)</h2>
+            <div class="card-content">
+                <div id="recent-rolls" style="max-height: 400px; overflow-y: auto;">
+                    <p style="text-align: center; color: var(--text-muted);">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION GESTION -->
+<div id="section-manage" class="tab-content">
+    <div class="stats-grid">
+        <!-- GESTION DES BACKUPS -->
+        <div class="stat-card">
+            <h2 class="card-title">💾 Sauvegardes (Backups)</h2>
+            <div class="card-content">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-success" onclick="createBackup()">
+                        ➕ Créer un Backup Manuel
+                    </button>
+                </div>
+
+                <div id="backups-list" style="max-height: 400px; overflow-y: auto;">
+                    <p style="text-align: center; color: var(--text-muted);">Chargement...</p>
+                </div>
+
+                <div id="backup-info" style="margin-top: 15px; padding: 10px; background: var(--dark-bg); border-radius: 6px; text-align: center; color: var(--text-muted); font-size: 0.9rem;"></div>
+            </div>
+        </div>
+
+        <!-- GESTION DES PERSONNAGES -->
+        <div class="stat-card">
+            <h2 class="card-title">👥 Personnages</h2>
+            <div class="card-content">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-success" onclick="showCreateCharacterDialog()">
+                        ➕ Nouveau Personnage
+                    </button>
+                </div>
+
+                <div id="characters-list" style="max-height: 400px; overflow-y: auto;">
+                    <p style="text-align: center; color: var(--text-muted);">Chargement...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMPORT/EXPORT -->
+        <div class="stat-card">
+            <h2 class="card-title">📤 Import / Export</h2>
+            <div class="card-content">
+                <h3 style="color: var(--secondary-gold); margin-bottom: 15px;">Export</h3>
+                <div style="margin-bottom: 30px;">
+                    <button class="btn btn-info" onclick="exportCharacter()">
+                        📥 Télécharger le Personnage (JSON)
+                    </button>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">
+                        Télécharge toutes les données du personnage actuel au format JSON
+                    </p>
+                </div>
+
+                <h3 style="color: var(--secondary-gold); margin-bottom: 15px;">Import</h3>
+                <div>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importCharacterFile()">
+                    <button class="btn btn-info" onclick="document.getElementById('import-file').click()">
+                        📤 Importer un Personnage
+                    </button>
+                    <p style="color: var(--warning-orange); font-size: 0.85rem; margin-top: 10px;">
+                        ⚠️ Un backup automatique sera créé avant l'import
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DANGER ZONE -->
+        <div class="stat-card" style="border-color: var(--danger-red);">
+            <h2 class="card-title" style="color: var(--danger-red);">⚠️ Zone Dangereuse</h2>
+            <div class="card-content">
+                <button class="btn btn-danger" onclick="clearAllStats()">
+                    🗑️ Effacer les Statistiques
+                </button>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">
+                    Supprime toutes les statistiques de jets enregistrées
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog pour créer un personnage -->
+<div id="create-character-dialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: var(--medium-bg); border: 2px solid var(--primary-gold); border-radius: 12px; padding: 30px; max-width: 500px; width: 90%;">
+        <h2 style="color: var(--primary-gold); margin-bottom: 20px;">Créer un Nouveau Personnage</h2>
+        <div style="margin-bottom: 20px;">
+            <label style="color: var(--secondary-gold); font-weight: bold; display: block; margin-bottom: 8px;">Nom du personnage :</label>
+            <input type="text" id="new-character-name" placeholder="Ex: Aragorn" style="width: 100%; padding: 10px; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-light); font-size: 1rem;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" onclick="hideCreateCharacterDialog()">Annuler</button>
+            <button class="btn btn-success" onclick="createCharacter()">Créer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+let distributionChart = null;
+let activityChart = null;
+
+// ============================================================================
+// GESTION DES ONGLETS
+// ============================================================================
+
+function switchTab(tab) {
+    // Désactiver tous les onglets et sections
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    // Activer l'onglet et la section sélectionnés
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    document.getElementById(`section-${tab}`).classList.add('active');
+
+    // Charger les données appropriées
+    if (tab === 'stats') {
+        loadAllStats();
+    } else if (tab === 'manage') {
+        loadBackups();
+        loadCharacters();
+    }
+}
+
+// ============================================================================
+// STATISTIQUES - CHARGEMENT DES DONNÉES
+// ============================================================================
+
+async function loadAllStats() {
+    await Promise.all([
+        loadSummary(),
+        loadDistribution(),
+        loadStatsByType(),
+        loadActivity(),
+        loadRecentRolls()
+    ]);
+}
+
+async function loadSummary() {
+    try {
+        const res = await fetch('/api/stats/summary');
+        const data = await res.json();
+
+        const container = document.getElementById('summary-content');
+
+        if (data.total_rolls === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucune statistique disponible.<br>Lancez des dés pour commencer à collecter des données !</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div style="text-align: center; background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-gold);">${data.total_rolls}</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Jets Totaux</div>
+                </div>
+                <div style="text-align: center; background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--success-green);">${data.criticals}</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Critiques (${data.critical_rate}%)</div>
+                </div>
+                <div style="text-align: center; background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--danger-red);">${data.fumbles}</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Échecs (${data.fumble_rate}%)</div>
+                </div>
+                <div style="text-align: center; background: var(--dark-bg); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--info-blue);">${data.average_result.toFixed(1)}</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Moyenne</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadDistribution() {
+    try {
+        const res = await fetch('/api/stats/distribution');
+        const distribution = await res.json();
+
+        const labels = Object.keys(distribution).map(n => `${n}`);
+        const values = Object.values(distribution);
+
+        const ctx = document.getElementById('distribution-chart').getContext('2d');
+
+        if (distributionChart) {
+            distributionChart.destroy();
+        }
+
+        distributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Nombre de jets',
+                    data: values,
+                    backgroundColor: values.map((v, i) => {
+                        const num = parseInt(labels[i]);
+                        if (num === 20) return 'rgba(76, 175, 80, 0.8)';  // Vert pour 20
+                        if (num === 1) return 'rgba(244, 67, 54, 0.8)';   // Rouge pour 1
+                        return 'rgba(212, 175, 55, 0.8)';                  // Or pour les autres
+                    }),
+                    borderColor: values.map((v, i) => {
+                        const num = parseInt(labels[i]);
+                        if (num === 20) return 'rgba(76, 175, 80, 1)';
+                        if (num === 1) return 'rgba(244, 67, 54, 1)';
+                        return 'rgba(212, 175, 55, 1)';
+                    }),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Fréquence de chaque résultat (1-20)',
+                        color: '#d4af37',
+                        font: {size: 14}
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {color: '#b0b0b0'},
+                        grid: {color: 'rgba(255, 255, 255, 0.1)'}
+                    },
+                    x: {
+                        ticks: {color: '#b0b0b0'},
+                        grid: {color: 'rgba(255, 255, 255, 0.1)'}
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadStatsByType() {
+    try {
+        const res = await fetch('/api/stats/by_type');
+        const stats = await res.json();
+
+        const container = document.getElementById('stats-by-type');
+
+        if (Object.keys(stats).length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucune donnée</p>';
+            return;
+        }
+
+        // Trier par nombre de jets (descendant)
+        const sortedStats = Object.entries(stats).sort((a, b) => b[1].count - a[1].count);
+
+        container.innerHTML = sortedStats.map(([type, data]) => `
+            <div style="background: var(--dark-bg); padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--primary-gold);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: var(--primary-gold); font-size: 1.1rem;">${type}</div>
+                    <div style="background: var(--medium-bg); padding: 5px 12px; border-radius: 15px; font-weight: bold;">${data.count} jets</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; font-size: 0.9rem;">
+                    <div>
+                        <span style="color: var(--text-muted);">Moyenne: </span>
+                        <span style="color: var(--info-blue); font-weight: bold;">${data.average}</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Min: </span>
+                        <span style="color: var(--text-light);">${data.min}</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Max: </span>
+                        <span style="color: var(--text-light);">${data.max}</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Critiques: </span>
+                        <span style="color: var(--success-green); font-weight: bold;">${data.criticals} (${data.critical_rate}%)</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">Échecs: </span>
+                        <span style="color: var(--danger-red); font-weight: bold;">${data.fumbles} (${data.fumble_rate}%)</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadActivity() {
+    try {
+        const res = await fetch('/api/stats/by_period?days=7');
+        const data = await res.json();
+
+        // Créer un array de 7 derniers jours
+        const days = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split('T')[0];
+            days.push({
+                date: key,
+                label: d.toLocaleDateString('fr-FR', {weekday: 'short', day: 'numeric', month: 'short'}),
+                count: data[key] || 0
+            });
+        }
+
+        const ctx = document.getElementById('activity-chart').getContext('2d');
+
+        if (activityChart) {
+            activityChart.destroy();
+        }
+
+        activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: days.map(d => d.label),
+                datasets: [{
+                    label: 'Jets par jour',
+                    data: days.map(d => d.count),
+                    borderColor: 'rgba(212, 175, 55, 1)',
+                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {color: '#d4af37'}
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {color: '#b0b0b0', stepSize: 1},
+                        grid: {color: 'rgba(255, 255, 255, 0.1)'}
+                    },
+                    x: {
+                        ticks: {color: '#b0b0b0'},
+                        grid: {color: 'rgba(255, 255, 255, 0.1)'}
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadRecentRolls() {
+    try {
+        const res = await fetch('/api/stats/recent?limit=20');
+        const data = await res.json();
+
+        const container = document.getElementById('recent-rolls');
+
+        if (!data.rolls || data.rolls.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun jet récent</p>';
+            return;
+        }
+
+        container.innerHTML = data.rolls.map(roll => {
+            let borderColor = 'var(--primary-gold)';
+            if (roll.critical) borderColor = 'var(--success-green)';
+            if (roll.fumble) borderColor = 'var(--danger-red)';
+
+            return `
+                <div style="background: var(--dark-bg); padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid ${borderColor}; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; color: var(--primary-gold);">${roll.roll_type}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            ${roll.formula} = ${roll.result}
+                            ${roll.critical ? ' • ✨ Critique' : ''}
+                            ${roll.fumble ? ' • 💀 Échec' : ''}
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                        ${new Date(roll.timestamp).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// ============================================================================
+// GESTION - BACKUPS
+// ============================================================================
+
+function loadBackups() {
+    fetch('/api/backups/list')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('backups-list');
+            const info = document.getElementById('backup-info');
+
+            if (!data.backups || data.backups.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun backup</p>';
+                info.textContent = 'Aucun backup enregistré';
+                return;
+            }
+
+            container.innerHTML = data.backups.map(backup => `
+                <div style="background: var(--dark-bg); padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; color: var(--primary-gold);">${backup.filename}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            ${backup.created} • ${backup.size_mb} MB
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-small btn-info" onclick="restoreBackup('${backup.filename}')" title="Restaurer">↩️</button>
+                        <button class="btn btn-small btn-success" onclick="downloadBackup('${backup.filename}')" title="Télécharger">💾</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteBackup('${backup.filename}')" title="Supprimer">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            info.textContent = `${data.count} backup(s) • Total: ${data.total_size.mb} MB`;
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Erreur lors du chargement des backups', 'error');
+        });
+}
+
+function createBackup() {
+    if (!confirm('Créer un backup manuel du personnage actuel ?')) return;
+
+    fetch('/api/backups/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({label: 'manual'})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Backup créé avec succès', 'success');
+            loadBackups();
+        } else {
+            showToast('Erreur lors de la création du backup', 'error');
+        }
+    });
+}
+
+function restoreBackup(filename) {
+    if (!confirm(`Restaurer le backup "${filename}" ?\n\nLe personnage actuel sera remplacé (un backup de sécurité sera créé).`)) return;
+
+    fetch('/api/backups/restore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Backup restauré ! Rechargement...', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Erreur lors de la restauration', 'error');
+        }
+    });
+}
+
+function downloadBackup(filename) {
+    window.location.href = `/api/backups/download/${filename}`;
+    showToast('Téléchargement du backup...', 'info');
+}
+
+function deleteBackup(filename) {
+    if (!confirm(`Supprimer le backup "${filename}" ?\n\nCette action est irréversible.`)) return;
+
+    fetch('/api/backups/delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Backup supprimé', 'success');
+            loadBackups();
+        } else {
+            showToast('Erreur lors de la suppression', 'error');
+        }
+    });
+}
+
+// ============================================================================
+// GESTION - PERSONNAGES
+// ============================================================================
+
+function loadCharacters() {
+    fetch('/api/characters/list')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('characters-list');
+
+            if (!data.characters || data.characters.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun personnage</p>';
+                return;
+            }
+
+            container.innerHTML = data.characters.map(char => {
+                const isCurrent = char.filename === data.current;
+                return `
+                    <div style="background: ${isCurrent ? 'var(--primary-gold)' : 'var(--dark-bg)'}; color: ${isCurrent ? 'var(--dark-bg)' : 'var(--text-light)'}; padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.1rem;">${char.name}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.8;">
+                                ${char.is_main ? '⭐ Principal' : '📁 ' + char.filename}
+                                ${isCurrent ? ' • ACTIF' : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            ${!isCurrent ? `<button class="btn btn-small ${isCurrent ? '' : 'btn-info'}" onclick="switchCharacter('${char.filename}')" ${isCurrent ? 'disabled' : ''}>✓ Activer</button>` : ''}
+                            ${!char.is_main ? `<button class="btn btn-small btn-danger" onclick="deleteCharacter('${char.filename}', '${char.name}')">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Erreur lors du chargement des personnages', 'error');
+        });
+}
+
+function showCreateCharacterDialog() {
+    document.getElementById('create-character-dialog').style.display = 'flex';
+    document.getElementById('new-character-name').value = '';
+    document.getElementById('new-character-name').focus();
+}
+
+function hideCreateCharacterDialog() {
+    document.getElementById('create-character-dialog').style.display = 'none';
+}
+
+function createCharacter() {
+    const name = document.getElementById('new-character-name').value.trim();
+
+    if (!name) {
+        showToast('Veuillez entrer un nom', 'warning');
+        return;
+    }
+
+    fetch('/api/characters/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`Personnage "${name}" créé !`, 'success');
+            hideCreateCharacterDialog();
+            loadCharacters();
+        } else {
+            showToast(data.error || 'Erreur lors de la création', 'error');
+        }
+    });
+}
+
+function switchCharacter(filename) {
+    if (!confirm('Changer de personnage actif ?\n\nLe dashboard sera rechargé.')) return;
+
+    fetch('/api/characters/switch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Personnage changé ! Rechargement...', 'success');
+            setTimeout(() => location.href = '/', 1500);
+        } else {
+            showToast(data.error || 'Erreur lors du changement', 'error');
+        }
+    });
+}
+
+function deleteCharacter(filename, name) {
+    if (!confirm(`Supprimer le personnage "${name}" ?\n\nTous ses fichiers seront supprimés définitivement.`)) return;
+
+    fetch('/api/characters/delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Personnage supprimé', 'success');
+            loadCharacters();
+        } else {
+            showToast(data.error || 'Erreur lors de la suppression', 'error');
+        }
+    });
+}
+
+// ============================================================================
+// GESTION - IMPORT/EXPORT
+// ============================================================================
+
+function exportCharacter() {
+    fetch('/api/export')
+        .then(res => res.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const filename = `${data.character_info.name.replace(/ /g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Personnage exporté !', 'success');
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Erreur lors de l\'export', 'error');
+        });
+}
+
+function importCharacterFile() {
+    const fileInput = document.getElementById('import-file');
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    if (!confirm('Importer ce personnage ?\n\nLe personnage actuel sera remplacé (un backup sera créé).')) {
+        fileInput.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/api/import/file', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Personnage importé ! Rechargement...', 'success');
+            setTimeout(() => location.href = '/', 1500);
+        } else {
+            showToast(data.error || 'Erreur lors de l\'import', 'error');
+        }
+        fileInput.value = '';
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Erreur lors de l\'import', 'error');
+        fileInput.value = '';
+    });
+}
+
+// ============================================================================
+// GESTION - DANGER ZONE
+// ============================================================================
+
+function clearAllStats() {
+    if (!confirm('Effacer TOUTES les statistiques de jets ?\n\nCette action est irréversible !')) return;
+
+    fetch('/api/stats/clear', {method: 'POST'})
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Statistiques effacées', 'success');
+                loadAllStats();
+            }
+        });
+}
+
+// ============================================================================
+// INITIALISATION
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Charger les statistiques par défaut
+    loadAllStats();
+
+    // Actualiser les stats toutes les 30 secondes si on est sur l'onglet stats
+    setInterval(() => {
+        if (document.getElementById('section-stats').classList.contains('active')) {
+            loadAllStats();
+        }
+    }, 30000);
+
+    // Fermer le dialog en cliquant en dehors
+    document.getElementById('create-character-dialog').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) hideCreateCharacterDialog();
+    });
+
+    // Enter dans le dialog de création
+    document.getElementById('new-character-name').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') createCharacter();
+    });
+});
+</script>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+@media (min-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.tab-btn {
+    padding: 12px 30px;
+    background: var(--dark-bg);
+    color: var(--text-light);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: var(--medium-bg);
+    border-color: var(--primary-gold);
+}
+
+.tab-btn.active {
+    background: var(--primary-gold);
+    color: var(--dark-bg);
+    border-color: var(--primary-gold);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

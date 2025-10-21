@@ -51,11 +51,7 @@
                 <span class="nav-icon">🎒</span>
                 <span class="nav-text">Inventaire</span>
             </a>
-            <a href="{{ url_for('statistics') }}" class="nav-item {% if request.endpoint == 'statistics' %}active{% endif %}">
-                <span class="nav-icon">📈</span>
-                <span class="nav-text">Graphiques</span>
-            </a>
-            <a href="{{ url_for('manage') }}" class="nav-item {% if request.endpoint == 'manage' %}active{% endif %}">
+            <a href="{{ url_for('gestion') }}" class="nav-item {% if request.endpoint == 'gestion' %}active{% endif %}">
                 <span class="nav-icon">⚙️</span>
                 <span class="nav-text">Gestion</span>
             </a>

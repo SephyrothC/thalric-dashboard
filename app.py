@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 from flask_socketio import SocketIO, emit
 import json
 import random
@@ -1028,17 +1028,21 @@ def import_character_file():
 # ROUTES PAGES
 # ============================================================================
 
+@app.route('/gestion')
+def gestion():
+    """Page de gestion combinée (stats + management)"""
+    data = load_character_data()
+    return render_template('gestion.html', character=data)
+
 @app.route('/manage')
 def manage():
-    """Page de gestion (backups, personnages, stats)"""
-    data = load_character_data()
-    return render_template('manage.html', character=data)
+    """Page de gestion (backups, personnages, stats) - Redirige vers /gestion"""
+    return redirect(url_for('gestion'))
 
 @app.route('/statistics')
 def statistics():
-    """Page de statistiques avec graphiques"""
-    data = load_character_data()
-    return render_template('statistics.html', character=data)
+    """Page de statistiques avec graphiques - Redirige vers /gestion"""
+    return redirect(url_for('gestion'))
 
 # ============================================================================
 # MAIN
