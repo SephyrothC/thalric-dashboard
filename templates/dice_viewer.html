@@ -378,7 +378,12 @@
             <div class="status-indicator" id="status-indicator"></div>
             <span id="connection-text">Connexion en cours...</span>
         </div>
-        <div id="last-update">En attente...</div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div id="roll-counter" style="background: var(--dark-bg); padding: 5px 12px; border-radius: 15px; font-weight: bold;">
+                <span style="color: var(--primary-gold);">Jets: </span><span id="roll-count">0</span>
+            </div>
+            <div id="last-update">En attente...</div>
+        </div>
     </div>
 
     <!-- Container des résultats de dés -->
@@ -438,8 +443,12 @@
                 noRolls.style.display = 'none';
             }
 
+            // Mettre à jour le compteur
+            document.getElementById('roll-count').textContent = rollCount;
+
             // Mettre à jour le statut
             lastUpdate.textContent = `Dernier jet: ${data.timestamp}`;
+            connectionText.textContent = `Connecté - ${rollCount} jet(s) reçu(s)`;
         });
 
         function displayDiceResult(data) {
@@ -476,11 +485,11 @@
             // Insérer en haut de la liste
             diceContainer.insertBefore(resultElement, diceContainer.firstChild);
 
-            // Limiter à 2 résultats maximum
+            // Limiter à 20 résultats maximum (comme l'historique principal)
             const results = diceContainer.querySelectorAll('.dice-result');
-            if (results.length > 2) {
-                // Supprimer tous les résultats au-delà des 2 premiers
-                for (let i = 2; i < results.length; i++) {
+            if (results.length > 20) {
+                // Supprimer tous les résultats au-delà des 20 premiers
+                for (let i = 20; i < results.length; i++) {
                     results[i].remove();
                 }
             }
