@@ -202,11 +202,15 @@ async function loadAllStats() {
 }
 
 async function loadSummary() {
+    const container = document.getElementById('summary-content');
     try {
         const res = await fetch('/api/stats/summary');
-        const data = await res.json();
 
-        const container = document.getElementById('summary-content');
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
 
         if (data.total_rolls === 0) {
             container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucune statistique disponible.<br>Lancez des dés pour commencer à collecter des données !</p>';
@@ -234,13 +238,21 @@ async function loadSummary() {
             </div>
         `;
     } catch (err) {
-        console.error(err);
+        console.error('Erreur loadSummary:', err);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="color: var(--danger-red); font-size: 1.2rem; margin-bottom: 10px;">❌ Erreur de chargement</div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">${err.message}</div>
+                <button class="btn btn-info" onclick="loadSummary()" style="margin-top: 15px;">🔄 Réessayer</button>
+            </div>
+        `;
     }
 }
 
 async function loadDistribution() {
     try {
         const res = await fetch('/api/stats/distribution');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const distribution = await res.json();
 
         const labels = Object.keys(distribution).map(n => `${n}`);
@@ -302,16 +314,16 @@ async function loadDistribution() {
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error('Erreur loadDistribution:', err);
     }
 }
 
 async function loadStatsByType() {
+    const container = document.getElementById('stats-by-type');
     try {
         const res = await fetch('/api/stats/by_type');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const stats = await res.json();
-
-        const container = document.getElementById('stats-by-type');
 
         if (Object.keys(stats).length === 0) {
             container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucune donnée</p>';
@@ -352,13 +364,15 @@ async function loadStatsByType() {
             </div>
         `).join('');
     } catch (err) {
-        console.error(err);
+        console.error('Erreur loadStatsByType:', err);
+        container.innerHTML = '<p style="text-align: center; color: var(--danger-red);">❌ Erreur de chargement</p>';
     }
 }
 
 async function loadActivity() {
     try {
         const res = await fetch('/api/stats/by_period?days=7');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
         // Créer un array de 7 derniers jours
@@ -418,16 +432,16 @@ async function loadActivity() {
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error('Erreur loadActivity:', err);
     }
 }
 
 async function loadRecentRolls() {
+    const container = document.getElementById('recent-rolls');
     try {
         const res = await fetch('/api/stats/recent?limit=20');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
-        const container = document.getElementById('recent-rolls');
 
         if (!data.rolls || data.rolls.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Aucun jet récent</p>';
@@ -461,7 +475,8 @@ async function loadRecentRolls() {
             `;
         }).join('');
     } catch (err) {
-        console.error(err);
+        console.error('Erreur loadRecentRolls:', err);
+        container.innerHTML = '<p style="text-align: center; color: var(--danger-red);">❌ Erreur de chargement</p>';
     }
 }
 
