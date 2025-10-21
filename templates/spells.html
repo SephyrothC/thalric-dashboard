@@ -693,13 +693,29 @@ function updateSpellSlots(level, remaining) {
 }
 
 function updateSpellSlotsVisual(level, remaining) {
-    const slots = document.querySelectorAll(`[data-level="${level}"][data-slot]`);
+    const slots = document.querySelectorAll(`.spell-slot[data-level="${level}"]`);
+    console.log(`🎨 Updating visual slots for level ${level}: ${slots.length} slots found, ${remaining} should be filled`);
+
     slots.forEach((slot, index) => {
-        if (index < remaining) {
-            slot.style.background = getSlotColor(level);
+        const slotNumber = index + 1;
+        const shouldBeFilled = index < remaining;
+        const color = shouldBeFilled ? getSlotColor(level) : 'transparent';
+
+        console.log(`  Slot ${slotNumber}: ${shouldBeFilled ? 'FILL' : 'EMPTY'} with color ${color}`);
+
+        // Utiliser setAttribute pour forcer la mise à jour
+        if (shouldBeFilled) {
+            slot.style.setProperty('background', color, 'important');
         } else {
-            slot.style.background = 'transparent';
+            slot.style.setProperty('background', 'transparent', 'important');
         }
+
+        // Animation de flash pour visualiser le changement
+        slot.style.transition = 'all 0.3s ease';
+        slot.style.transform = 'scale(1.15)';
+        setTimeout(() => {
+            slot.style.transform = 'scale(1)';
+        }, 200);
     });
 }
 

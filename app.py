@@ -775,6 +775,72 @@ def get_spell_slots():
     })
 
 
+@app.route('/api/restore_spell_slots', methods=['POST'])
+def restore_spell_slots():
+    """Restaure tous les emplacements de sorts (repos long)"""
+    try:
+        character_data = load_character_data()
+
+        # Restaurer tous les emplacements à leur maximum
+        spell_slots = character_data['spellcasting']['spell_slots']
+        spell_slots_current = character_data['spellcasting']['spell_slots_current']
+
+        for level in spell_slots.keys():
+            spell_slots_current[level] = spell_slots[level]
+
+        save_character_data(character_data)
+
+        print(f"⚡ Repos long : tous les emplacements de sorts restaurés")
+
+        return jsonify({
+            'success': True,
+            'spell_slots_current': spell_slots_current,
+            'message': 'Tous les emplacements de sorts ont été restaurés'
+        })
+    except Exception as e:
+        print(f"❌ Erreur dans restore_spell_slots: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
+
+
+@app.route('/api/use_spell_slot', methods=['POST'])
+def use_spell_slot():
+    """Consomme un emplacement de sort"""
+    try:
+        data = request.json
+        level = data.get('level')
+
+        if not level:
+            return jsonify({'error': 'Niveau manquant'}), 400
+
+        character_data = load_character_data()
+        level_str = str(level)
+
+        current = character_data['spellcasting']['spell_slots_current'].get(level_str, 0)
+
+        if current <= 0:
+            return jsonify({'error': f'Aucun emplacement de niveau {level} disponible'}), 400
+
+        character_data['spellcasting']['spell_slots_current'][level_str] -= 1
+        save_character_data(character_data)
+
+        remaining = character_data['spellcasting']['spell_slots_current'][level_str]
+
+        print(f"🔮 Emplacement niveau {level} consommé : {remaining} restant(s)")
+
+        return jsonify({
+            'success': True,
+            'level': level,
+            'remaining': remaining
+        })
+    except Exception as e:
+        print(f"❌ Erreur dans use_spell_slot: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
+
+
 @app.route('/api/get_feature_uses', methods=['POST'])
 def get_feature_uses():
     data = request.json
