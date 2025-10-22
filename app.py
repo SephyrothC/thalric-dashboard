@@ -914,34 +914,64 @@ def download_backup(filename):
 @app.route('/api/stats/summary', methods=['GET'])
 def get_stats_summary():
     """Retourne le résumé des statistiques"""
-    summary = stats_manager.get_summary()
-    return jsonify(summary)
+    try:
+        summary = stats_manager.get_summary()
+        return jsonify(summary)
+    except Exception as e:
+        print(f"❌ Erreur get_stats_summary: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats/distribution', methods=['GET'])
 def get_roll_distribution():
     """Retourne la distribution des jets de d20"""
-    distribution = stats_manager.get_roll_distribution()
-    return jsonify(distribution)
+    try:
+        distribution = stats_manager.get_roll_distribution()
+        return jsonify(distribution)
+    except Exception as e:
+        print(f"❌ Erreur get_roll_distribution: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats/by_type', methods=['GET'])
 def get_stats_by_type():
     """Retourne les stats par type de jet"""
-    stats = stats_manager.get_stats_by_type()
-    return jsonify(stats)
+    try:
+        stats = stats_manager.get_stats_by_type()
+        return jsonify(stats)
+    except Exception as e:
+        print(f"❌ Erreur get_stats_by_type: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats/recent', methods=['GET'])
 def get_recent_rolls():
     """Retourne les jets récents"""
-    limit = request.args.get('limit', 20, type=int)
-    rolls = stats_manager.get_recent_rolls(limit)
-    return jsonify({'rolls': rolls})
+    try:
+        limit = request.args.get('limit', 20, type=int)
+        rolls = stats_manager.get_recent_rolls(limit)
+        return jsonify({'rolls': rolls})
+    except Exception as e:
+        print(f"❌ Erreur get_recent_rolls: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats/by_period', methods=['GET'])
 def get_stats_by_period():
     """Retourne les stats par période"""
-    days = request.args.get('days', 7, type=int)
-    stats = stats_manager.get_rolls_by_period(days)
-    return jsonify(stats)
+    try:
+        days = request.args.get('days', 7, type=int)
+        stats = stats_manager.get_rolls_by_period(days)
+        return jsonify(stats)
+    except Exception as e:
+        print(f"❌ Erreur get_stats_by_period: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats/clear', methods=['POST'])
 def clear_stats():
