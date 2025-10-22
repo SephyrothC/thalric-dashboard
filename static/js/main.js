@@ -284,11 +284,18 @@ function showDiceResult(result, rollData = null) {
     if (rollData) {
         addToDiceHistory(rollData);
 
-        // Jouer le son approprié
+        // Jouer le son approprié et déclencher les animations
         if (rollData.critical) {
             DiceSounds.critical();
+            // Animation de particules pour critique
+            const center = getElementCenter(resultsDiv);
+            criticalParticlesBurst(center.x, center.y);
         } else if (rollData.fumble) {
             DiceSounds.fumble();
+            // Animation shake + particules pour fumble
+            shakeScreen('medium');
+            const center = getElementCenter(resultsDiv);
+            fumbleParticlesBurst(center.x, center.y);
         } else {
             DiceSounds.success();
         }
@@ -613,6 +620,21 @@ function rollWeaponAttack(weaponKey) {
 // === SORTS ===
 function castSpell(spellName, isAttack = false) {
     const level = parseInt(document.getElementById('spell-level-select')?.value) || 1;
+
+    // Déterminer le type de sort pour l'animation
+    let spellType = 'default';
+    if (spellName.toLowerCase().includes('fire') || spellName.toLowerCase().includes('feu')) spellType = 'fire';
+    else if (spellName.toLowerCase().includes('ice') || spellName.toLowerCase().includes('glace')) spellType = 'ice';
+    else if (spellName.toLowerCase().includes('light') || spellName.toLowerCase().includes('éclair')) spellType = 'lightning';
+    else if (spellName.toLowerCase().includes('heal') || spellName.toLowerCase().includes('soin')) spellType = 'healing';
+    else if (spellName.toLowerCase().includes('holy') || spellName.toLowerCase().includes('sacré')) spellType = 'holy';
+    else if (spellName.toLowerCase().includes('dark') || spellName.toLowerCase().includes('ombre')) spellType = 'dark';
+
+    // Animation de lancement de sort
+    const spellButton = event?.target;
+    if (spellButton) {
+        spellCastAnimation(spellButton, spellType);
+    }
 
     makeRequest('/api/cast_spell', {
         spell: spellName,
