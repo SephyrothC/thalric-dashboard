@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from backup_manager import BackupManager
 from stats_manager import StatsManager
+from conditions_manager import ConditionsManager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thalric_dice_secret_key'
@@ -18,6 +19,7 @@ socketio = SocketIO(app, cors_allowed_origins="*",
 # Initialiser les gestionnaires
 backup_manager = BackupManager()
 stats_manager = StatsManager()
+conditions_manager = ConditionsManager()
 
 # Fichier du personnage actif
 CURRENT_CHARACTER_FILE = 'current_character.txt'
@@ -260,6 +262,12 @@ def combat():
 def spells():
     data = load_character_data()
     return render_template('spells.html', character=data)
+
+
+@app.route('/conditions')
+def conditions():
+    data = load_character_data()
+    return render_template('conditions.html', character=data)
 
 
 @app.route('/inventory')
@@ -954,6 +962,155 @@ def export_stats():
     """Exporte les statistiques"""
     stats = stats_manager.export_stats()
     return jsonify(stats)
+
+# ============================================================================
+# API CONDITIONS
+# ============================================================================
+
+@app.route('/api/conditions/list', methods=['GET'])
+def get_conditions():
+    """Retourne toutes les conditions actives"""
+    try:
+        active_conditions = conditions_manager.get_active_conditions()
+        return jsonify({
+            'success': True,
+            'conditions': active_conditions,
+            'count': len(active_conditions)
+        })
+    except Exception as e:
+        print(f"❌ Erreur get_conditions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/definitions', methods=['GET'])
+def get_conditions_definitions():
+    """Retourne toutes les définitions de conditions disponibles"""
+    try:
+        definitions = conditions_manager.get_all_conditions_definitions()
+        return jsonify({
+            'success': True,
+            'definitions': definitions
+        })
+    except Exception as e:
+        print(f"❌ Erreur get_conditions_definitions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/add', methods=['POST'])
+def add_condition():
+    """Ajoute une condition au personnage"""
+    try:
+        data = request.json
+        condition_id = data.get('condition_id')
+        duration_type = data.get('duration_type', 'permanent')
+        duration_value = data.get('duration_value')
+        source = data.get('source', '')
+        notes = data.get('notes', '')
+
+        if not condition_id:
+            return jsonify({'error': 'condition_id manquant'}), 400
+
+        result = conditions_manager.add_condition(
+            condition_id=condition_id,
+            duration_type=duration_type,
+            duration_value=duration_value,
+            source=source,
+            notes=notes
+        )
+
+        if result:
+            return jsonify({
+                'success': True,
+                'condition': result,
+                'message': f'Condition {result["name"]} ajoutée'
+            })
+        else:
+            return jsonify({'error': 'Impossible d\'ajouter la condition'}), 400
+
+    except Exception as e:
+        print(f"❌ Erreur add_condition: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/remove', methods=['POST'])
+def remove_condition():
+    """Retire une condition du personnage"""
+    try:
+        data = request.json
+        condition_id = data.get('condition_id')
+
+        if not condition_id:
+            return jsonify({'error': 'condition_id manquant'}), 400
+
+        success = conditions_manager.remove_condition(condition_id)
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Condition retirée'
+            })
+        else:
+            return jsonify({'error': 'Condition non trouvée'}), 404
+
+    except Exception as e:
+        print(f"❌ Erreur remove_condition: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/update', methods=['POST'])
+def update_condition():
+    """Met à jour une condition existante"""
+    try:
+        data = request.json
+        condition_id = data.get('condition_id')
+        duration_value = data.get('duration_value')
+        notes = data.get('notes')
+
+        if not condition_id:
+            return jsonify({'error': 'condition_id manquant'}), 400
+
+        success = conditions_manager.update_condition(
+            condition_id=condition_id,
+            duration_value=duration_value,
+            notes=notes
+        )
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Condition mise à jour'
+            })
+        else:
+            return jsonify({'error': 'Condition non trouvée'}), 404
+
+    except Exception as e:
+        print(f"❌ Erreur update_condition: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/clear', methods=['POST'])
+def clear_conditions():
+    """Retire toutes les conditions"""
+    try:
+        conditions_manager.clear_all_conditions()
+        return jsonify({
+            'success': True,
+            'message': 'Toutes les conditions ont été retirées'
+        })
+    except Exception as e:
+        print(f"❌ Erreur clear_conditions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conditions/decrement_rounds', methods=['POST'])
+def decrement_round_conditions():
+    """Décrémente d'un round toutes les conditions avec durée en rounds"""
+    try:
+        expired = conditions_manager.decrement_round_conditions()
+        return jsonify({
+            'success': True,
+            'expired': expired,
+            'message': f'{len(expired)} condition(s) expirée(s)'
+        })
+    except Exception as e:
+        print(f"❌ Erreur decrement_round_conditions: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # ============================================================================
 # API MULTI-CHARACTERS

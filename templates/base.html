@@ -43,6 +43,11 @@
                 <span class="nav-icon">✨</span>
                 <span class="nav-text">Sorts</span>
             </a>
+            <a href="{{ url_for('conditions') }}" class="nav-item {% if request.endpoint == 'conditions' %}active{% endif %}" style="position: relative;">
+                <span class="nav-icon">🩹</span>
+                <span class="nav-text">Conditions</span>
+                <span class="conditions-badge" id="conditions-badge" style="position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; border-radius: 50%; width: 20px; height: 20px; display: none; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;"></span>
+            </a>
             <a href="{{ url_for('dice_roller') }}" class="nav-item {% if request.endpoint == 'dice_roller' %}active{% endif %}">
                 <span class="nav-icon">🎲</span>
                 <span class="nav-text">Dés</span>
@@ -124,5 +129,33 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
+
+    <!-- Script pour le badge de conditions -->
+    <script>
+    async function updateConditionsBadge() {
+        try {
+            const res = await fetch('/api/conditions/list');
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const badge = document.getElementById('conditions-badge');
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (err) {
+            // Silencieux - ne pas afficher d'erreur dans le badge
+        }
+    }
+
+    // Mettre à jour au chargement
+    document.addEventListener('DOMContentLoaded', () => {
+        updateConditionsBadge();
+        // Actualiser toutes les 10 secondes
+        setInterval(updateConditionsBadge, 10000);
+    });
+    </script>
 </body>
 </html>
