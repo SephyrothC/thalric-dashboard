@@ -331,27 +331,169 @@
 
         /* Responsive pour tablette */
         @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+
             .header h1 {
                 font-size: 2rem;
+            }
+
+            .header .subtitle {
+                font-size: 1rem;
+            }
+
+            .status-bar {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .dice-container {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .dice-result {
+                padding: 20px;
             }
 
             .dice-total {
                 font-size: 3rem;
             }
 
-            .dice-container {
-                padding: 15px;
+            .dice-type {
+                font-size: 1.1rem;
             }
 
-            .dice-result {
-                padding: 20px;
+            .special-indicators {
+                flex-wrap: wrap;
+                gap: 10px;
             }
         }
 
-        /* Mode paysage tablette */
-        @media (orientation: landscape) and (max-height: 600px) {
+        /* Responsive pour mobile */
+        @media (max-width: 480px) {
+            .header {
+                padding: 12px;
+            }
+
             .header h1 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
+            }
+
+            .header .subtitle {
+                font-size: 0.85rem;
+            }
+
+            .status-bar {
+                padding: 8px 12px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .status-bar > div:last-child {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                font-size: 0.85rem;
+            }
+
+            #last-update {
+                font-size: 0.75rem;
+            }
+
+            #roll-counter {
+                padding: 4px 10px;
+                font-size: 0.85rem;
+            }
+
+            .dice-container {
+                padding: 10px;
+                gap: 10px;
+                max-height: calc(100vh - 180px);
+            }
+
+            .dice-result {
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .dice-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+
+            .dice-type {
+                font-size: 1rem;
+                width: 100%;
+            }
+
+            .dice-timestamp {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+
+            .dice-total {
+                font-size: 2.5rem;
+                margin: 15px 0;
+            }
+
+            .dice-formula {
+                font-size: 0.95rem;
+                margin-bottom: 8px;
+            }
+
+            .dice-details {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+
+            .special-indicators {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .indicator {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                width: 100%;
+                text-align: center;
+            }
+
+            .no-rolls {
+                font-size: 1rem;
+                padding: 0 20px;
+            }
+
+            .footer {
+                padding: 10px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Mode paysage tablette/mobile */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .header {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .status-bar {
+                padding: 6px 15px;
+            }
+
+            .dice-container {
+                max-height: calc(100vh - 120px);
             }
 
             .dice-total {
@@ -359,7 +501,39 @@
             }
 
             .dice-result {
-                padding: 15px;
+                padding: 12px;
+            }
+
+            .dice-main {
+                margin: 10px 0;
+            }
+
+            .footer {
+                padding: 8px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Mode très petit écran (< 360px) */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .header .subtitle {
+                font-size: 0.75rem;
+            }
+
+            .dice-total {
+                font-size: 2rem;
+            }
+
+            .dice-type {
+                font-size: 0.9rem;
+            }
+
+            .dice-result {
+                padding: 12px;
             }
         }
     </style>
@@ -376,13 +550,13 @@
     <div class="status-bar">
         <div class="connection-status">
             <div class="status-indicator" id="status-indicator"></div>
-            <span id="connection-text">Connexion en cours...</span>
+            <span id="connection-text">Connexion...</span>
         </div>
-        <div style="display: flex; gap: 20px; align-items: center;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <div id="roll-counter" style="background: var(--dark-bg); padding: 5px 12px; border-radius: 15px; font-weight: bold;">
-                <span style="color: var(--primary-gold);">Jets: </span><span id="roll-count">0</span>
+                <span style="color: var(--primary-gold);">🎲 </span><span id="roll-count">0</span>
             </div>
-            <div id="last-update">En attente...</div>
+            <div id="last-update" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">En attente...</div>
         </div>
     </div>
 
@@ -418,14 +592,15 @@
         socket.on('connect', function () {
             console.log('✅ Connecté au serveur WebSocket');
             statusIndicator.classList.remove('disconnected');
-            connectionText.textContent = 'Connecté - En attente des dés';
-            lastUpdate.textContent = 'Connecté à ' + new Date().toLocaleTimeString();
+            connectionText.textContent = 'Connecté';
+            lastUpdate.textContent = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
         });
 
         socket.on('disconnect', function () {
             console.log('❌ Déconnecté du serveur WebSocket');
             statusIndicator.classList.add('disconnected');
-            connectionText.textContent = 'Déconnecté - Tentative de reconnexion...';
+            connectionText.textContent = 'Déconnecté';
+            lastUpdate.textContent = 'Reconnexion...';
         });
 
         socket.on('status', function (data) {
@@ -446,9 +621,16 @@
             // Mettre à jour le compteur
             document.getElementById('roll-count').textContent = rollCount;
 
-            // Mettre à jour le statut
-            lastUpdate.textContent = `Dernier jet: ${data.timestamp}`;
-            connectionText.textContent = `Connecté - ${rollCount} jet(s) reçu(s)`;
+            // Mettre à jour le statut (format court pour mobile)
+            const shortTime = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            lastUpdate.textContent = shortTime;
+
+            // Texte adaptatif selon largeur écran
+            if (window.innerWidth < 480) {
+                connectionText.textContent = `✓ ${rollCount} jets`;
+            } else {
+                connectionText.textContent = `Connecté - ${rollCount} jet(s)`;
+            }
         });
 
         function displayDiceResult(data) {
@@ -456,11 +638,16 @@
             const resultElement = document.createElement('div');
             resultElement.className = `dice-result ${data.animation_class || 'normal-roll'}`;
 
+            // Format timestamp court pour mobile
+            const timestamp = window.innerWidth < 480
+                ? new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})
+                : data.timestamp;
+
             // Contenu HTML du résultat
             resultElement.innerHTML = `
                 <div class="dice-header">
                     <div class="dice-type">${data.roll_type}</div>
-                    <div class="dice-timestamp">${data.timestamp}</div>
+                    <div class="dice-timestamp">${timestamp}</div>
                 </div>
                 
                 <div class="dice-main">
