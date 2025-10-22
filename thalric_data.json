@@ -16,7 +16,7 @@
     "wisdom": 10,
     "charisma": 20,
     "proficiency_bonus": 4,
-    "ac": 21,
+    "ac": 22,
     "hp_max": 100,
     "hp_current": 100,
     "speed": 30,
@@ -58,10 +58,10 @@
   },
   "armor": {
     "plate_armor": {
-      "name": "Plate +1",
+      "name": "Plate +2",
       "type": "heavy",
-      "ac": 18,
-      "ac_bonus": 1,
+      "ac": 19,
+      "ac_bonus": 2,
       "stealth_disadvantage": true
     },
     "sentinel_shield": {
