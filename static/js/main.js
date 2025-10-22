@@ -5,11 +5,6 @@ let radiantSoulActive = false; // État de Radiant Soul
 // WebSocket pour diffusion des dés
 let diceSocket = null;
 
-// Cache des conditions actives
-let activeConditionsCache = [];
-let conditionsCacheTimestamp = 0;
-const CACHE_DURATION = 10000; // 10 secondes
-
 // Historique des jets de dés (persistant)
 let diceHistory = JSON.parse(localStorage.getItem('diceHistory')) || [];
 const MAX_HISTORY_ITEMS = 50;
@@ -19,230 +14,6 @@ let currentTheme = localStorage.getItem('theme') || 'dark';
 
 // Son activé/désactivé
 let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
-
-// === SYSTÈME DE GESTION DES CONDITIONS ===
-
-/**
- * Récupère les conditions actives (avec cache pour performances)
- */
-async function getActiveConditions() {
-    const now = Date.now();
-
-    // Utiliser le cache si encore valide
-    if (activeConditionsCache.length > 0 && (now - conditionsCacheTimestamp) < CACHE_DURATION) {
-        return activeConditionsCache;
-    }
-
-    try {
-        const res = await fetch('/api/conditions/list');
-        if (!res.ok) return [];
-
-        const data = await res.json();
-        activeConditionsCache = data.conditions || [];
-        conditionsCacheTimestamp = now;
-
-        return activeConditionsCache;
-    } catch (err) {
-        console.warn('Erreur lors de la récupération des conditions:', err);
-        return [];
-    }
-}
-
-/**
- * Analyse les conditions et retourne les alertes pour un type de jet donné
- * @param {string} rollType - Type de jet: 'attack', 'ability', 'saving_throw', 'skill'
- * @param {string} specificAbility - Caractéristique spécifique (ex: 'str', 'dex', 'con')
- * @returns {Array} Tableau d'objets alerte {type: 'warning'|'danger'|'info', message: string}
- */
-async function getConditionAlerts(rollType, specificAbility = null) {
-    const conditions = await getActiveConditions();
-    if (conditions.length === 0) return [];
-
-    const alerts = [];
-
-    conditions.forEach(condition => {
-        const condId = condition.condition_id;
-
-        // Conditions affectant les JETS D'ATTAQUE
-        if (rollType === 'attack') {
-            if (condId === 'poisoned') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '☠️',
-                    message: 'Empoisonné : Désavantage aux jets d\'attaque'
-                });
-            }
-            if (condId === 'prone') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '🤕',
-                    message: 'À terre : Désavantage aux jets d\'attaque'
-                });
-            }
-            if (condId === 'blinded') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '👁️',
-                    message: 'Aveuglé : Désavantage aux jets d\'attaque'
-                });
-            }
-            if (condId === 'frightened') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '😱',
-                    message: 'Effrayé : Désavantage si la source est visible'
-                });
-            }
-            if (condId === 'restrained') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '⛓️',
-                    message: 'Entravé : Désavantage aux jets d\'attaque'
-                });
-            }
-            if (condId === 'invisible') {
-                alerts.push({
-                    type: 'info',
-                    icon: '👻',
-                    message: 'Invisible : Avantage aux jets d\'attaque'
-                });
-            }
-        }
-
-        // Conditions affectant les JETS DE CARACTÉRISTIQUE et COMPÉTENCES
-        if (rollType === 'ability' || rollType === 'skill') {
-            if (condId === 'poisoned') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '☠️',
-                    message: 'Empoisonné : Désavantage aux jets de caractéristique'
-                });
-            }
-            if (condId === 'frightened') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '😱',
-                    message: 'Effrayé : Désavantage aux jets de caractéristique'
-                });
-            }
-            if (condId.startsWith('exhaustion_')) {
-                alerts.push({
-                    type: 'warning',
-                    icon: '😫',
-                    message: 'Épuisement : Désavantage aux jets de caractéristique'
-                });
-            }
-
-            // Échecs automatiques pour certaines caractéristiques
-            if (specificAbility === 'str' || specificAbility === 'dex') {
-                if (condId === 'paralyzed') {
-                    alerts.push({
-                        type: 'danger',
-                        icon: '⚡',
-                        message: `Paralysé : Échec automatique aux jets de ${specificAbility.toUpperCase()}`
-                    });
-                }
-                if (condId === 'petrified') {
-                    alerts.push({
-                        type: 'danger',
-                        icon: '🗿',
-                        message: `Pétrifié : Échec automatique aux jets de ${specificAbility.toUpperCase()}`
-                    });
-                }
-                if (condId === 'stunned') {
-                    alerts.push({
-                        type: 'danger',
-                        icon: '💫',
-                        message: `Étourdi : Échec automatique aux jets de ${specificAbility.toUpperCase()}`
-                    });
-                }
-                if (condId === 'unconscious') {
-                    alerts.push({
-                        type: 'danger',
-                        icon: '💤',
-                        message: `Inconscient : Échec automatique aux jets de ${specificAbility.toUpperCase()}`
-                    });
-                }
-            }
-
-            // Entravé affecte les jets de Dextérité
-            if (specificAbility === 'dex' && condId === 'restrained') {
-                alerts.push({
-                    type: 'warning',
-                    icon: '⛓️',
-                    message: 'Entravé : Désavantage aux jets de Dextérité'
-                });
-            }
-        }
-
-        // Conditions affectant les JETS DE SAUVEGARDE
-        if (rollType === 'saving_throw') {
-            // Concentration nécessite un jet de sauvegarde de Constitution
-            if (condId === 'concentrating' && specificAbility === 'con') {
-                alerts.push({
-                    type: 'info',
-                    icon: '🎯',
-                    message: 'En concentration : Maintenir la concentration (DD 10 ou dégâts/2)'
-                });
-            }
-
-            // Échecs automatiques pour Force et Dextérité
-            if (specificAbility === 'str' || specificAbility === 'dex') {
-                if (condId === 'paralyzed' || condId === 'petrified' || condId === 'stunned' || condId === 'unconscious') {
-                    alerts.push({
-                        type: 'danger',
-                        icon: '⚠️',
-                        message: `Échec automatique aux sauvegardes de ${specificAbility.toUpperCase()}`
-                    });
-                }
-            }
-        }
-
-        // Alertes générales pour certaines conditions graves
-        if (condId === 'incapacitated') {
-            alerts.push({
-                type: 'danger',
-                icon: '🚫',
-                message: 'Neutralisé : Impossible d\'effectuer des actions ou réactions'
-            });
-        }
-    });
-
-    return alerts;
-}
-
-/**
- * Affiche les alertes de conditions dans le résultat
- */
-function formatConditionAlerts(alerts) {
-    if (alerts.length === 0) return '';
-
-    const alertsHTML = alerts.map(alert => {
-        let bgColor;
-        if (alert.type === 'danger') bgColor = 'var(--danger-red)';
-        else if (alert.type === 'warning') bgColor = 'var(--warning-orange)';
-        else bgColor = 'var(--info-blue, #2196F3)';
-
-        return `
-            <div style="
-                margin: 10px 0;
-                padding: 10px 15px;
-                background: ${bgColor};
-                border-left: 4px solid rgba(0,0,0,0.3);
-                border-radius: 4px;
-                font-size: 0.9rem;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <span style="font-size: 1.2rem;">${alert.icon}</span>
-                <span>${alert.message}</span>
-            </div>
-        `;
-    }).join('');
-
-    return `<div style="margin-top: 15px;">${alertsHTML}</div>`;
-}
 
 // === SYSTÈME DE SONS ===
 const DiceSounds = {
@@ -605,12 +376,8 @@ function makeRequest(url, data, callback, loadingElement = null) {
 }
 
 // === JETS DE SAUVEGARDE ===
-async function rollSavingThrow(ability, event) {
+function rollSavingThrow(ability, event) {
     const button = event?.target;
-
-    // Vérifier les conditions AVANT le jet
-    const alerts = await getConditionAlerts('saving_throw', ability);
-    const alertsHTML = formatConditionAlerts(alerts);
 
     makeRequest('/api/saving_throw', { ability: ability }, function(data) {
         let resultClass = '';
@@ -626,7 +393,6 @@ async function rollSavingThrow(ability, event) {
 
         const result = `
             <h3>Jet de Sauvegarde - ${ability.toUpperCase()}</h3>
-            ${alertsHTML}
             <div class="dice-roll ${resultClass}">
                 ${data.roll} ${formatBonus(data.bonus)} = ${data.total}
             </div>
@@ -647,23 +413,8 @@ async function rollSavingThrow(ability, event) {
 }
 
 // === JETS DE COMPÉTENCES ===
-async function rollSkillCheck(skill, skillName, event) {
+function rollSkillCheck(skill, skillName, event) {
     const button = event?.target;
-
-    // Mapping des compétences vers leurs caractéristiques
-    const skillAbilities = {
-        'acrobatics': 'dex', 'sleight_of_hand': 'dex', 'stealth': 'dex',
-        'arcana': 'int', 'history': 'int', 'investigation': 'int', 'nature': 'int', 'religion': 'int',
-        'animal_handling': 'wis', 'insight': 'wis', 'medicine': 'wis', 'perception': 'wis', 'survival': 'wis',
-        'deception': 'cha', 'intimidation': 'cha', 'performance': 'cha', 'persuasion': 'cha',
-        'athletics': 'str'
-    };
-
-    const ability = skillAbilities[skill] || null;
-
-    // Vérifier les conditions AVANT le jet
-    const alerts = await getConditionAlerts('skill', ability);
-    const alertsHTML = formatConditionAlerts(alerts);
 
     makeRequest('/api/skill_check', { skill: skill }, function(data) {
         let resultClass = '';
@@ -679,7 +430,6 @@ async function rollSkillCheck(skill, skillName, event) {
 
         const result = `
             <h3>Test de ${skillName}</h3>
-            ${alertsHTML}
             <div class="dice-roll ${resultClass}">
                 ${data.roll} ${formatBonus(data.bonus)} = ${data.total}
             </div>
@@ -783,13 +533,9 @@ function modifyHPFromInput() {
 }
 
 // === ATTAQUES D'ARMES ===
-async function rollWeaponAttack(weaponKey) {
+function rollWeaponAttack(weaponKey) {
     const sacredWeapon = document.getElementById('sacred-weapon-check')?.checked || false;
     const smiteLevel = parseInt(document.getElementById('smite-level-select')?.value) || 0;
-
-    // Vérifier les conditions AVANT l'attaque
-    const alerts = await getConditionAlerts('attack');
-    const alertsHTML = formatConditionAlerts(alerts);
 
     makeRequest('/api/weapon_attack', {
         weapon: weaponKey,
@@ -810,7 +556,6 @@ async function rollWeaponAttack(weaponKey) {
 
         let result = `
             <h3>Attaque - Crystal Longsword</h3>
-            ${alertsHTML}
             <div class="dice-roll ${attackClass}">
                 Attaque: ${data.attack_roll} ${formatBonus(data.attack_bonus)} = ${data.attack_total}
             </div>
@@ -866,15 +611,8 @@ async function rollWeaponAttack(weaponKey) {
 }
 
 // === SORTS ===
-async function castSpell(spellName, isAttack = false) {
+function castSpell(spellName, isAttack = false) {
     const level = parseInt(document.getElementById('spell-level-select')?.value) || 1;
-
-    // Vérifier les conditions AVANT le sort d'attaque
-    let alertsHTML = '';
-    if (isAttack) {
-        const alerts = await getConditionAlerts('attack');
-        alertsHTML = formatConditionAlerts(alerts);
-    }
 
     makeRequest('/api/cast_spell', {
         spell: spellName,
@@ -913,7 +651,7 @@ async function castSpell(spellName, isAttack = false) {
                 attackClass = 'critical';
             }
 
-            result += alertsHTML + `
+            result += `
                 <div class="dice-roll ${attackClass}" style="margin-top: 15px;">
                     Attaque: ${data.attack_roll} ${formatBonus(data.attack_bonus)} = ${data.attack_total}
                 </div>
