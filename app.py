@@ -363,7 +363,7 @@ def weapon_attack():
     attack_roll = roll_die(20)
     attack_bonus = weapon['attack_bonus']
     if sacred_weapon:
-        attack_bonus += 3
+        attack_bonus += 5  # Bonus d'attaque Sacred Weapon
 
     attack_total = attack_roll + attack_bonus
 
