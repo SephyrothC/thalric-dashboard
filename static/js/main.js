@@ -782,6 +782,77 @@ function modifyHPFromInput() {
     }
 }
 
+// === TEMPORARY HIT POINTS ===
+
+/**
+ * Définir les Temporary HP
+ * Règle: Les temp HP ne se cumulent pas, on garde le maximum
+ */
+function setTempHP() {
+    const input = document.getElementById('temp-hp-input');
+    const newTempHP = parseInt(input.value) || 0;
+
+    if (newTempHP <= 0) {
+        showDiceResult('<div class="danger">⚠️ Montant invalide</div>');
+        return;
+    }
+
+    makeRequest('/api/set_temp_hp', {
+        temp_hp: newTempHP
+    }, function(data) {
+        if (data.success) {
+            updateTempHP(data.temp_hp);
+
+            let message = `<h3>⚡ Temporary Hit Points</h3>`;
+            if (data.replaced) {
+                message += `<div style="color: var(--warning-orange);">Remplacé ${data.old_temp_hp} Temp HP par ${data.temp_hp}</div>`;
+            } else {
+                message += `<div style="color: var(--info-blue);">+${data.temp_hp} Temporary Hit Points obtenus</div>`;
+            }
+            message += `<div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                Les Temp HP sont perdus en premier lors des dégâts
+            </div>`;
+
+            showDiceResult(message);
+            input.value = 0;
+        } else {
+            showDiceResult(`<div class="danger">❌ ${data.error}</div>`);
+        }
+    });
+}
+
+/**
+ * Retirer tous les Temporary HP
+ */
+function clearTempHP() {
+    makeRequest('/api/clear_temp_hp', {}, function(data) {
+        if (data.success) {
+            updateTempHP(0);
+            showDiceResult(`
+                <h3>🗑️ Temp HP Retirés</h3>
+                <div>${data.removed} Temporary HP retirés</div>
+            `);
+        }
+    });
+}
+
+/**
+ * Mettre à jour l'affichage des Temp HP
+ */
+function updateTempHP(tempHP) {
+    const display = document.getElementById('temp-hp-display');
+    if (display) {
+        display.textContent = tempHP;
+
+        // Animation
+        display.style.transform = 'scale(1.3)';
+        display.style.color = tempHP > 0 ? 'var(--info-blue)' : 'var(--text-muted)';
+        setTimeout(() => {
+            display.style.transform = 'scale(1)';
+        }, 300);
+    }
+}
+
 // === ATTAQUES D'ARMES ===
 async function rollWeaponAttack(weaponKey) {
     const sacredWeapon = document.getElementById('sacred-weapon-check')?.checked || false;

@@ -1,7 +1,7 @@
 {
   "character_info": {
     "name": "Thalric Cœur d'Argent",
-    "level": 12,
+    "level": 13,
     "class": "Paladin",
     "subclass": "Oath of Devotion",
     "race": "Aasimar",
@@ -15,10 +15,11 @@
     "intelligence": 10,
     "wisdom": 10,
     "charisma": 20,
-    "proficiency_bonus": 4,
+    "proficiency_bonus": 5,
     "ac": 22,
-    "hp_max": 100,
-    "hp_current": 100,
+    "hp_max": 109,
+    "hp_current": 109,
+    "temp_hp": 0,
     "speed": 30,
     "passive_perception": 10
   },
@@ -27,22 +28,22 @@
     "dexterity": 0,
     "constitution": 3,
     "intelligence": 0,
-    "wisdom": 5,
-    "charisma": 9
+    "wisdom": 6,
+    "charisma": 10
   },
   "skills": {
-    "athletics": 7,
-    "insight": 5,
-    "intimidation": 9,
+    "athletics": 8,
+    "insight": 6,
+    "intimidation": 10,
     "perception": 0,
-    "persuasion": 9,
-    "religion": 4
+    "persuasion": 10,
+    "religion": 5
   },
   "weapons": {
     "crystal_longsword": {
       "name": "Crystal Longsword",
       "type": "martial_melee",
-      "attack_bonus": 7,
+      "attack_bonus": 8,
       "damage": "1d8+3",
       "damage_type": "slashing",
       "magic_damage": "1d8",
@@ -99,8 +100,8 @@
   },
   "spellcasting": {
     "ability": "charisma",
-    "spell_attack_bonus": 9,
-    "spell_save_dc": 17,
+    "spell_attack_bonus": 10,
+    "spell_save_dc": 18,
     "spell_slots": {
       "1": 4,
       "2": 3,
@@ -185,6 +186,17 @@
         "components": "V, S, M",
         "description": "+2 AC to target",
         "prepared": true
+      },
+      "heroism": {
+        "name": "Heroism",
+        "level": 1,
+        "school": "enchantment",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V, S",
+        "description": "Target is immune to frightened and gains 5 temporary HP at the start of each of its turns",
+        "prepared": true
       }
     },
     "level_2": {
@@ -232,6 +244,17 @@
         "duration": "Instantaneous",
         "components": "V, S",
         "description": "Summon celestial, fey, or fiend spirit as mount",
+        "prepared": true
+      },
+      "prayer_of_healing": {
+        "name": "Prayer of Healing",
+        "level": 2,
+        "school": "evocation",
+        "casting_time": "10 minutes",
+        "range": "30 feet",
+        "duration": "Instantaneous",
+        "components": "V",
+        "description": "Up to 6 creatures regain 2d8 + CHA modifier HP",
         "prepared": true
       }
     },
@@ -304,6 +327,17 @@
         "description": "End all curses on creature or object",
         "source": "Oath spell",
         "always_prepared": true
+      },
+      "crusaders_mantle": {
+        "name": "Crusader's Mantle",
+        "level": 3,
+        "school": "evocation",
+        "casting_time": "1 action",
+        "range": "Self",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V",
+        "description": "Allies within 30 feet deal +1d4 radiant damage on weapon attacks",
+        "prepared": true
       }
     },
     "level_4": {
@@ -330,6 +364,17 @@
         "description": "Spectral guardian deals 20 radiant damage to enemies that approach",
         "source": "Oath spell",
         "always_prepared": true
+      },
+      "death_ward": {
+        "name": "Death Ward",
+        "level": 4,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "8 hours",
+        "components": "V, S",
+        "description": "First time target would drop to 0 HP, they instead drop to 1 HP. Spell ends after preventing death once.",
+        "prepared": true
       }
     }
   },
@@ -346,14 +391,14 @@
         },
         "turn_the_unholy": {
           "name": "Turn the Unholy",
-          "description": "Fiends and undead within 30ft must make Wisdom save (DC 17) or be turned"
+          "description": "Fiends and undead within 30ft must make Wisdom save (DC 18) or be turned"
         }
       }
     },
     "lay_on_hands": {
       "name": "Lay on Hands",
-      "pool": 60,
-      "pool_max": 60,
+      "pool": 65,
+      "pool_max": 65,
       "recharge": "long_rest",
       "description": "Heal HP or cure disease/poison (5 HP per disease/poison)"
     },

@@ -615,21 +615,107 @@ def roll_custom_dice():
 @app.route('/api/modify_hp', methods=['POST'])
 def modify_hp():
     data = request.json
-    change = data.get('change')
+    change = data.get('change', 0)
 
     character_data = load_character_data()
     current_hp = character_data['stats']['hp_current']
     max_hp = character_data['stats']['hp_max']
+    temp_hp = character_data['stats'].get('temp_hp', 0)
 
-    new_hp = max(0, min(max_hp, current_hp + change))
-    character_data['stats']['hp_current'] = new_hp
+    # Si on prend des dégâts (change < 0)
+    if change < 0:
+        damage = abs(change)
+        temp_hp_lost = 0
+        hp_lost = 0
 
+        # Les temp HP absorbent les dégâts en premier
+        if temp_hp > 0:
+            if damage <= temp_hp:
+                temp_hp -= damage
+                temp_hp_lost = damage
+            else:
+                temp_hp_lost = temp_hp
+                hp_lost = damage - temp_hp
+                temp_hp = 0
+                current_hp = max(0, current_hp - hp_lost)
+        else:
+            hp_lost = damage
+            current_hp = max(0, current_hp - damage)
+
+        character_data['stats']['hp_current'] = current_hp
+        character_data['stats']['temp_hp'] = temp_hp
+        save_character_data(character_data)
+
+        return jsonify({
+            'success': True,
+            'hp_current': current_hp,
+            'hp_max': max_hp,
+            'temp_hp': temp_hp,
+            'temp_hp_lost': temp_hp_lost,
+            'hp_lost': hp_lost,
+            'total_damage': damage
+        })
+
+    # Si on soigne (change > 0)
+    else:
+        # Les soins n'affectent pas les temp HP
+        new_hp = min(max_hp, current_hp + change)
+        healed = new_hp - current_hp
+
+        character_data['stats']['hp_current'] = new_hp
+        save_character_data(character_data)
+
+        return jsonify({
+            'success': True,
+            'hp_current': new_hp,
+            'hp_max': max_hp,
+            'temp_hp': temp_hp,
+            'healed': healed
+        })
+
+
+# API - Définir Temporary HP
+@app.route('/api/set_temp_hp', methods=['POST'])
+def set_temp_hp():
+    data = request.json
+    new_temp_hp = data.get('temp_hp', 0)
+
+    if new_temp_hp < 0:
+        return jsonify({'success': False, 'error': 'Montant invalide'})
+
+    character_data = load_character_data()
+    old_temp_hp = character_data['stats'].get('temp_hp', 0)
+
+    # Règle D&D: Les temp HP ne se cumulent pas, on garde le maximum
+    if new_temp_hp > old_temp_hp:
+        character_data['stats']['temp_hp'] = new_temp_hp
+        save_character_data(character_data)
+
+        return jsonify({
+            'success': True,
+            'temp_hp': new_temp_hp,
+            'old_temp_hp': old_temp_hp,
+            'replaced': old_temp_hp > 0
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': f'Les Temp HP actuels ({old_temp_hp}) sont déjà plus élevés'
+        })
+
+
+# API - Retirer Temporary HP
+@app.route('/api/clear_temp_hp', methods=['POST'])
+def clear_temp_hp():
+    character_data = load_character_data()
+    old_temp_hp = character_data['stats'].get('temp_hp', 0)
+
+    character_data['stats']['temp_hp'] = 0
     save_character_data(character_data)
 
     return jsonify({
-        'hp_current': new_hp,
-        'hp_max': max_hp,
-        'change': new_hp - current_hp
+        'success': True,
+        'removed': old_temp_hp
     })
 
 

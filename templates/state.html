@@ -164,6 +164,42 @@
                     Soins Complets
                 </button>
             </div>
+
+            <!-- Temporary Hit Points -->
+            <div style="margin-top: 15px; padding: 15px; background: var(--medium-bg); border-radius: 8px; border: 2px solid var(--info-blue);">
+                <h4 style="color: var(--info-blue); margin-bottom: 10px;">⚡ Temporary Hit Points</h4>
+
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;">HP Temporaires actuels</div>
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--info-blue);">
+                            <span id="temp-hp-display">{{ character.stats.temp_hp }}</span>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1;">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;">
+                            Ajouter Temp HP
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="temp-hp-input" min="0" max="200" value="0"
+                                style="width: 80px; padding: 8px; background: var(--dark-bg); border: 1px solid var(--border-color);
+                                       border-radius: 4px; color: var(--text-light); font-size: 1rem;">
+                            <button class="btn btn-info btn-small" onclick="setTempHP()">
+                                ⚡ Définir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.75rem; color: var(--text-muted); padding: 8px; background: var(--dark-bg); border-radius: 4px;">
+                    ℹ️ Les Temp HP ne se cumulent pas (prendre le maximum). Ils sont perdus en premier lors des dégâts.
+                </div>
+
+                <button class="btn btn-danger btn-small" onclick="clearTempHP()" style="width: 100%; margin-top: 8px;">
+                    🗑️ Retirer Temp HP
+                </button>
+            </div>
         </div>
     </div>
 

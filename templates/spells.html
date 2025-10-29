@@ -226,7 +226,8 @@
                     ('sanctuary', character.spells.level_1.sanctuary, '🏛️', 'var(--info-blue)', true),
                     ('bless', character.spells.level_1.bless, '✨', 'var(--primary-gold)', false),
                     ('cure_wounds', character.spells.level_1.cure_wounds, '💚', 'var(--success-green)', false),
-                    ('shield_of_faith', character.spells.level_1.shield_of_faith, '🛡️', 'var(--primary-gold)', false)
+                    ('shield_of_faith', character.spells.level_1.shield_of_faith, '🛡️', 'var(--primary-gold)', false),
+                    ('heroism', character.spells.level_1.heroism, '💪', 'var(--warning-orange)', false)
                 ] %}
                 {% for spell_id, spell_data, icon, color, is_oath in level_1_spells %}
                 <div class="spell-item" data-level="1" data-type="{{ 'oath' if is_oath else 'normal' }}" data-name="{{ spell_data.name }}">
@@ -261,7 +262,8 @@
                     ('lesser_restoration', character.spells.level_2.lesser_restoration, '✨', 'var(--success-green)', true),
                     ('zone_of_truth', character.spells.level_2.zone_of_truth, '👁️', 'var(--info-blue)', true),
                     ('aid', character.spells.level_2.aid, '💪', 'var(--warning-orange)', false),
-                    ('find_steed', character.spells.level_2.find_steed, '🐎', 'var(--primary-gold)', false)
+                    ('find_steed', character.spells.level_2.find_steed, '🐎', 'var(--primary-gold)', false),
+                    ('prayer_of_healing', character.spells.level_2.prayer_of_healing, '🙏', 'var(--success-green)', false)
                 ] %}
                 {% for spell_id, spell_data, icon, color, is_oath in level_2_spells %}
                 <div class="spell-item" data-level="2" data-type="{{ 'oath' if is_oath else 'normal' }}" data-name="{{ spell_data.name }}">
@@ -298,7 +300,8 @@
                     ('remove_curse', character.spells.level_3.remove_curse, '🔓', 'var(--info-blue)', true),
                     ('revivify', character.spells.level_3.revivify, '💎', 'var(--warning-orange)', false),
                     ('aura_of_vitality', character.spells.level_3.aura_of_vitality, '💚', 'var(--success-green)', false),
-                    ('magic_circle', character.spells.level_3.magic_circle, '⭕', 'var(--primary-gold)', false)
+                    ('magic_circle', character.spells.level_3.magic_circle, '⭕', 'var(--primary-gold)', false),
+                    ('crusaders_mantle', character.spells.level_3.crusaders_mantle, '⚔️', 'var(--warning-orange)', false)
                 ] %}
                 {% for spell_id, spell_data, icon, color, is_oath in level_3_spells %}
                 <div class="spell-item" data-level="3" data-type="{{ 'oath' if is_oath else 'normal' }}" data-name="{{ spell_data.name }}">
@@ -331,7 +334,8 @@
                 <!-- Sorts Niveau 4 -->
                 {% set level_4_spells = [
                     ('aura_of_life', character.spells.level_4.aura_of_life, '💚', 'var(--success-green)', true),
-                    ('guardian_of_faith', character.spells.level_4.guardian_of_faith, '👼', 'var(--primary-gold)', true)
+                    ('guardian_of_faith', character.spells.level_4.guardian_of_faith, '👼', 'var(--primary-gold)', true),
+                    ('death_ward', character.spells.level_4.death_ward, '💀', 'var(--danger-red)', false)
                 ] %}
                 {% for spell_id, spell_data, icon, color, is_oath in level_4_spells %}
                 <div class="spell-item" data-level="4" data-type="{{ 'oath' if is_oath else 'normal' }}" data-name="{{ spell_data.name }}">
