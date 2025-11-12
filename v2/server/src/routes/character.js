@@ -248,4 +248,41 @@ router.post('/feature/use', (req, res) => {
   }
 });
 
+// Save session notes
+router.post('/notes', (req, res) => {
+  try {
+    const { notes } = req.body;
+
+    if (notes === undefined) {
+      return res.status(400).json({ error: 'Missing notes' });
+    }
+
+    const db = getDb();
+    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const data = JSON.parse(character.data);
+    data.session_notes = notes;
+
+    const stmt = db.prepare(`
+      UPDATE character
+      SET data = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+
+    stmt.run(JSON.stringify(data));
+
+    res.json({
+      success: true,
+      message: 'Notes saved successfully'
+    });
+  } catch (error) {
+    console.error('Error saving notes:', error);
+    res.status(500).json({ error: 'Failed to save notes' });
+  }
+});
+
 module.exports = router;
