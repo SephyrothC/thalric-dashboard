@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "🎲 =================================="
 echo "   Thalric Dashboard v2.0"
