@@ -1,7 +1,7 @@
 {
   "character_info": {
     "name": "Thalric Cœur d'Argent",
-    "level": 12,
+    "level": 14,
     "class": "Paladin",
     "subclass": "Oath of Devotion",
     "race": "Aasimar",
@@ -15,34 +15,35 @@
     "intelligence": 10,
     "wisdom": 10,
     "charisma": 20,
-    "proficiency_bonus": 4,
+    "proficiency_bonus": 5,
     "ac": 22,
-    "hp_max": 100,
-    "hp_current": 100,
+    "hp_max": 117,
+    "hp_current": 117,
+    "temp_hp": 20,
     "speed": 30,
     "passive_perception": 10
   },
   "saving_throws": {
-    "strength": 3,
-    "dexterity": 0,
-    "constitution": 3,
-    "intelligence": 0,
-    "wisdom": 5,
-    "charisma": 9
+    "strength": 8,
+    "dexterity": 5,
+    "constitution": 5,
+    "intelligence": 5,
+    "wisdom": 10,
+    "charisma": 15
   },
   "skills": {
-    "athletics": 7,
+    "athletics": 8,
     "insight": 5,
-    "intimidation": 9,
+    "intimidation": 10,
     "perception": 0,
-    "persuasion": 9,
-    "religion": 4
+    "persuasion": 15,
+    "religion": 5
   },
   "weapons": {
     "crystal_longsword": {
       "name": "Crystal Longsword",
       "type": "martial_melee",
-      "attack_bonus": 7,
+      "attack_bonus": 8,
       "damage": "1d8+3",
       "damage_type": "slashing",
       "magic_damage": "1d8",
@@ -56,51 +57,10 @@
       "description": "3 charges, regains 1d3 daily at dawn. Expend 1 charge to regain HP equal to extra radiant damage dealt."
     }
   },
-  "armor": {
-    "plate_armor": {
-      "name": "Plate +2",
-      "type": "heavy",
-      "ac": 19,
-      "ac_bonus": 2,
-      "stealth_disadvantage": true
-    },
-    "sentinel_shield": {
-      "name": "Sentinel Shield",
-      "type": "shield",
-      "ac": 2,
-      "properties": [
-        "advantage_initiative",
-        "advantage_perception"
-      ],
-      "description": "Advantage on initiative rolls and Wisdom (Perception) checks"
-    }
-  },
-  "magic_items": {
-    "ring_of_cold_resistance": {
-      "name": "Ring of Resistance, Cold",
-      "type": "ring",
-      "resistance": "cold",
-      "description": "Resistance to cold damage"
-    },
-    "periapt_of_wound_closure": {
-      "name": "Periapt of Wound Closure",
-      "type": "wondrous_item",
-      "rarity": "rare",
-      "attunement": true,
-      "description": "Stabilize at 0 HP. Double HP recovered from Hit Dice."
-    },
-    "potion_of_superior_healing": {
-      "name": "Potion of Superior Healing",
-      "type": "potion",
-      "rarity": "rare",
-      "quantity": 1,
-      "description": "Heals 8d4+8 HP"
-    }
-  },
   "spellcasting": {
     "ability": "charisma",
-    "spell_attack_bonus": 9,
-    "spell_save_dc": 17,
+    "spell_attack_bonus": 10,
+    "spell_save_dc": 18,
     "spell_slots": {
       "1": 4,
       "2": 3,
@@ -109,7 +69,7 @@
     },
     "spell_slots_current": {
       "1": 4,
-      "2": 3,
+      "2": 1,
       "3": 3,
       "4": 1
     }
@@ -185,6 +145,17 @@
         "components": "V, S, M",
         "description": "+2 AC to target",
         "prepared": true
+      },
+      "heroism": {
+        "name": "Heroism",
+        "level": 1,
+        "school": "enchantment",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V, S",
+        "description": "Target is immune to frightened and gains 5 temporary HP at the start of each of its turns",
+        "prepared": true
       }
     },
     "level_2": {
@@ -232,6 +203,17 @@
         "duration": "Instantaneous",
         "components": "V, S",
         "description": "Summon celestial, fey, or fiend spirit as mount",
+        "prepared": true
+      },
+      "prayer_of_healing": {
+        "name": "Prayer of Healing",
+        "level": 2,
+        "school": "evocation",
+        "casting_time": "10 minutes",
+        "range": "30 feet",
+        "duration": "Instantaneous",
+        "components": "V",
+        "description": "Up to 6 creatures regain 2d8 + CHA modifier HP",
         "prepared": true
       }
     },
@@ -304,6 +286,17 @@
         "description": "End all curses on creature or object",
         "source": "Oath spell",
         "always_prepared": true
+      },
+      "crusaders_mantle": {
+        "name": "Crusader's Mantle",
+        "level": 3,
+        "school": "evocation",
+        "casting_time": "1 action",
+        "range": "Self",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V",
+        "description": "Allies within 30 feet deal +1d4 radiant damage on weapon attacks",
+        "prepared": true
       }
     },
     "level_4": {
@@ -330,6 +323,17 @@
         "description": "Spectral guardian deals 20 radiant damage to enemies that approach",
         "source": "Oath spell",
         "always_prepared": true
+      },
+      "death_ward": {
+        "name": "Death Ward",
+        "level": 4,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "8 hours",
+        "components": "V, S",
+        "description": "First time target would drop to 0 HP, they instead drop to 1 HP. Spell ends after preventing death once.",
+        "prepared": true
       }
     }
   },
@@ -346,14 +350,14 @@
         },
         "turn_the_unholy": {
           "name": "Turn the Unholy",
-          "description": "Fiends and undead within 30ft must make Wisdom save (DC 17) or be turned"
+          "description": "Fiends and undead within 30ft must make Wisdom save (DC 18) or be turned"
         }
       }
     },
     "lay_on_hands": {
       "name": "Lay on Hands",
-      "pool": 60,
-      "pool_max": 60,
+      "pool": 70,
+      "pool_max": 70,
       "recharge": "long_rest",
       "description": "Heal HP or cure disease/poison (5 HP per disease/poison)"
     },
@@ -369,7 +373,7 @@
       "uses": 1,
       "uses_max": 1,
       "recharge": "long_rest",
-      "healing": "4d4",
+      "healing": "7d4",
       "description": "Aasimar racial healing ability"
     },
     "radiant_soul": {
@@ -405,16 +409,169 @@
       "damage": "1d8",
       "damage_type": "radiant",
       "description": "All melee weapon hits deal +1d8 radiant damage"
+    },
+    "cleansing_touch": {
+      "name": "Cleansing Touch",
+      "uses": 5,
+      "uses_max": 5,
+      "recharge": "long_rest",
+      "action_type": "action",
+      "description": "End one spell on yourself or a willing creature you touch. Uses equal to Charisma modifier (minimum 1)."
     }
   },
   "inventory": {
-    "notes": "Inventaire : --------------------------------------------------------------\n\nArmure de plaques +1 (portée)\nBouclier Sentinelle (porté)\nÉpée de cristal (équipée)\nAnneau de résistance au froid (porté)\nPeriapt of Wound Closure (porté au cou)\n6 diamond noir\nhuile d'affutage\n\nNote : --------------------------------------------------------------------\n\n",
-    "currency": {
-      "copper": 0,
-      "silver": 0,
-      "electrum": 0,
-      "gold": 2405,
-      "platinum": 71
+    "plate_armor_plus_2": {
+      "name": "Plate Armor +2",
+      "type": "Heavy Armor",
+      "rarity": "rare",
+      "attunement": false,
+      "description": "Enchanted plate armor providing AC 19 (base 18 + 2 enhancement). Worn.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "sentinel_shield": {
+      "name": "Sentinel Shield",
+      "type": "Shield",
+      "rarity": "uncommon",
+      "attunement": false,
+      "description": "Magical shield providing +2 AC. Grants advantage on initiative rolls and Wisdom (Perception) checks. Worn.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "crystal_longsword": {
+      "name": "Crystal Longsword",
+      "type": "Martial Weapon (Longsword)",
+      "rarity": "rare",
+      "attunement": false,
+      "description": "Magical longsword dealing 1d8+3 slashing + 1d8 radiant damage. Has 3 charges (regains 1d3 at dawn). Expend 1 charge to regain HP equal to radiant damage dealt. Equipped.",
+      "quantity": 1,
+      "equipped": true,
+      "charges": 3,
+      "charges_max": 3
+    },
+    "ring_of_cold_resistance": {
+      "name": "Ring of Cold Resistance",
+      "type": "Ring",
+      "rarity": "rare",
+      "attunement": true,
+      "description": "Grants resistance to cold damage. Worn and attuned.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "periapt_of_wound_closure": {
+      "name": "Periapt of Wound Closure",
+      "type": "Wondrous Item (Necklace)",
+      "rarity": "uncommon",
+      "attunement": true,
+      "description": "Stabilizes you automatically at 0 HP. Doubles HP recovered from Hit Dice. Worn and attuned.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "holy_symbol_pelor": {
+      "name": "Holy Symbol of Pelor",
+      "type": "Holy Symbol",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Silver sunburst symbol, spellcasting focus for paladin spells.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "potion_superior_healing": {
+      "name": "Potion of Superior Healing",
+      "type": "Potion",
+      "rarity": "rare",
+      "attunement": false,
+      "description": "Restores 8d4+8 hit points when consumed.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "black_diamond": {
+      "name": "Black Diamond",
+      "type": "Gemstone",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Worth ~300 gp each. Used as material component for Revivify spell.",
+      "quantity": 6,
+      "equipped": false
+    },
+    "oil_of_sharpness": {
+      "name": "Oil of Sharpness",
+      "type": "Potion",
+      "rarity": "very rare",
+      "attunement": false,
+      "description": "Apply to weapon for +3 bonus to attack and damage rolls for 1 hour.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "hempen_rope": {
+      "name": "Hempen Rope (50 ft)",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Standard adventuring rope.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "rations": {
+      "name": "Rations",
+      "type": "Food",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Trail rations, 1 day per unit.",
+      "quantity": 10,
+      "equipped": false
+    },
+    "waterskin": {
+      "name": "Waterskin",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Leather waterskin holding 4 pints of liquid.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "backpack": {
+      "name": "Backpack",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Standard adventuring backpack.",
+      "quantity": 1,
+      "equipped": true
+    },
+    "bedroll": {
+      "name": "Bedroll",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Portable sleeping roll.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "tinderbox": {
+      "name": "Tinderbox",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Contains flint, fire steel, and tinder.",
+      "quantity": 1,
+      "equipped": false
+    },
+    "torch": {
+      "name": "Torch",
+      "type": "Adventuring Gear",
+      "rarity": "common",
+      "attunement": false,
+      "description": "Burns for 1 hour, provides bright light 20 ft, dim light 20 ft more.",
+      "quantity": 5,
+      "equipped": false
     }
+  },
+  "money": {
+    "pp": 0,
+    "gp": 0,
+    "ep": 0,
+    "sp": 0,
+    "cp": 0
   }
 }
