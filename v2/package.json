@@ -1,0 +1,20 @@
+{
+  "name": "thalric-dashboard-v2",
+  "version": "2.0.0",
+  "description": "Modern D&D 5e Character Management Dashboard - Complete rewrite with Node.js + React + SQLite",
+  "scripts": {
+    "setup": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "migrate": "cd server && node src/db/migrate.js"
+  },
+  "keywords": ["dnd", "paladin", "dashboard", "character-sheet", "d20", "websocket"],
+  "author": "SephyrothC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SephyrothC/thalric-dashboard.git"
+  }
+}

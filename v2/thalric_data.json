@@ -1,0 +1,420 @@
+{
+  "character_info": {
+    "name": "Thalric Cœur d'Argent",
+    "level": 12,
+    "class": "Paladin",
+    "subclass": "Oath of Devotion",
+    "race": "Aasimar",
+    "subrace": "Radiant Soul",
+    "background": "Noble"
+  },
+  "stats": {
+    "strength": 16,
+    "dexterity": 10,
+    "constitution": 15,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 20,
+    "proficiency_bonus": 4,
+    "ac": 22,
+    "hp_max": 100,
+    "hp_current": 100,
+    "speed": 30,
+    "passive_perception": 10
+  },
+  "saving_throws": {
+    "strength": 3,
+    "dexterity": 0,
+    "constitution": 3,
+    "intelligence": 0,
+    "wisdom": 5,
+    "charisma": 9
+  },
+  "skills": {
+    "athletics": 7,
+    "insight": 5,
+    "intimidation": 9,
+    "perception": 0,
+    "persuasion": 9,
+    "religion": 4
+  },
+  "weapons": {
+    "crystal_longsword": {
+      "name": "Crystal Longsword",
+      "type": "martial_melee",
+      "attack_bonus": 7,
+      "damage": "1d8+3",
+      "damage_type": "slashing",
+      "magic_damage": "1d8",
+      "magic_damage_type": "radiant",
+      "properties": [
+        "versatile",
+        "magical"
+      ],
+      "charges": 3,
+      "charges_max": 3,
+      "description": "3 charges, regains 1d3 daily at dawn. Expend 1 charge to regain HP equal to extra radiant damage dealt."
+    }
+  },
+  "armor": {
+    "plate_armor": {
+      "name": "Plate +2",
+      "type": "heavy",
+      "ac": 19,
+      "ac_bonus": 2,
+      "stealth_disadvantage": true
+    },
+    "sentinel_shield": {
+      "name": "Sentinel Shield",
+      "type": "shield",
+      "ac": 2,
+      "properties": [
+        "advantage_initiative",
+        "advantage_perception"
+      ],
+      "description": "Advantage on initiative rolls and Wisdom (Perception) checks"
+    }
+  },
+  "magic_items": {
+    "ring_of_cold_resistance": {
+      "name": "Ring of Resistance, Cold",
+      "type": "ring",
+      "resistance": "cold",
+      "description": "Resistance to cold damage"
+    },
+    "periapt_of_wound_closure": {
+      "name": "Periapt of Wound Closure",
+      "type": "wondrous_item",
+      "rarity": "rare",
+      "attunement": true,
+      "description": "Stabilize at 0 HP. Double HP recovered from Hit Dice."
+    },
+    "potion_of_superior_healing": {
+      "name": "Potion of Superior Healing",
+      "type": "potion",
+      "rarity": "rare",
+      "quantity": 1,
+      "description": "Heals 8d4+8 HP"
+    }
+  },
+  "spellcasting": {
+    "ability": "charisma",
+    "spell_attack_bonus": 9,
+    "spell_save_dc": 17,
+    "spell_slots": {
+      "1": 4,
+      "2": 3,
+      "3": 3,
+      "4": 1
+    },
+    "spell_slots_current": {
+      "1": 4,
+      "2": 3,
+      "3": 3,
+      "4": 1
+    }
+  },
+  "spells": {
+    "cantrips": {
+      "light": {
+        "name": "Light",
+        "level": 0,
+        "school": "evocation",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "1 hour",
+        "components": "V, M",
+        "description": "Touch object to shed bright light in 20-foot radius",
+        "source": "Aasimar racial"
+      }
+    },
+    "level_1": {
+      "protection_from_evil_and_good": {
+        "name": "Protection from Evil and Good",
+        "level": 1,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Concentration, up to 10 minutes",
+        "components": "V, S, M",
+        "description": "Protects against aberrations, celestials, elementals, fey, fiends, and undead",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "sanctuary": {
+        "name": "Sanctuary",
+        "level": 1,
+        "school": "abjuration",
+        "casting_time": "1 bonus action",
+        "range": "30 feet",
+        "duration": "1 minute",
+        "components": "V, S, M",
+        "description": "Ward creature against attack, attackers must make Wisdom save",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "bless": {
+        "name": "Bless",
+        "level": 1,
+        "school": "enchantment",
+        "casting_time": "1 action",
+        "range": "30 feet",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V, S, M",
+        "description": "3 creatures add 1d4 to attack rolls and saving throws",
+        "prepared": true
+      },
+      "cure_wounds": {
+        "name": "Cure Wounds",
+        "level": 1,
+        "school": "evocation",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "Heal 1d8 + CHA modifier HP",
+        "prepared": true
+      },
+      "shield_of_faith": {
+        "name": "Shield of Faith",
+        "level": 1,
+        "school": "abjuration",
+        "casting_time": "1 bonus action",
+        "range": "60 feet",
+        "duration": "Concentration, up to 10 minutes",
+        "components": "V, S, M",
+        "description": "+2 AC to target",
+        "prepared": true
+      }
+    },
+    "level_2": {
+      "lesser_restoration": {
+        "name": "Lesser Restoration",
+        "level": 2,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "End one disease or condition (blinded, deafened, paralyzed, poisoned)",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "zone_of_truth": {
+        "name": "Zone of Truth",
+        "level": 2,
+        "school": "enchantment",
+        "casting_time": "1 action",
+        "range": "60 feet",
+        "duration": "10 minutes",
+        "components": "V, S",
+        "description": "Creatures in 15-foot radius cannot lie",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "aid": {
+        "name": "Aid",
+        "level": 2,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "30 feet",
+        "duration": "8 hours",
+        "components": "V, S, M",
+        "description": "Up to 3 creatures gain 5 temporary HP and increase HP maximum",
+        "prepared": true
+      },
+      "find_steed": {
+        "name": "Find Steed",
+        "level": 2,
+        "school": "conjuration",
+        "casting_time": "10 minutes",
+        "range": "30 feet",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "Summon celestial, fey, or fiend spirit as mount",
+        "prepared": true
+      }
+    },
+    "level_3": {
+      "dispel_magic": {
+        "name": "Dispel Magic",
+        "level": 3,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "120 feet",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "End spells of 3rd level or lower, roll for higher level spells",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "beacon_of_hope": {
+        "name": "Beacon of Hope",
+        "level": 3,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "30 feet",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V, S",
+        "description": "Creatures have advantage on Wisdom saves and death saves, regain max HP from healing",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "revivify": {
+        "name": "Revivify",
+        "level": 3,
+        "school": "necromancy",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Instantaneous",
+        "components": "V, S, M (diamonds worth 300 gp)",
+        "description": "Return creature to life that died within last minute",
+        "prepared": true
+      },
+      "aura_of_vitality": {
+        "name": "Aura of Vitality",
+        "level": 3,
+        "school": "evocation",
+        "casting_time": "1 action",
+        "range": "Self (30-foot radius)",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V",
+        "description": "Bonus action to heal 2d6 HP to creature in aura",
+        "prepared": true
+      },
+      "magic_circle": {
+        "name": "Magic Circle",
+        "level": 3,
+        "school": "abjuration",
+        "casting_time": "1 minute",
+        "range": "10 feet",
+        "duration": "1 hour",
+        "components": "V, S, M (100 gp consumed)",
+        "description": "10-foot cylinder protects against celestials, elementals, fey, fiends, or undead",
+        "prepared": true
+      },
+      "remove_curse": {
+        "name": "Remove Curse",
+        "level": 3,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "End all curses on creature or object",
+        "source": "Oath spell",
+        "always_prepared": true
+      }
+    },
+    "level_4": {
+      "aura_of_life": {
+        "name": "Aura of Life",
+        "level": 4,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Self (30-foot radius)",
+        "duration": "Concentration, up to 10 minutes",
+        "components": "V",
+        "description": "Resistance to necrotic damage, allies at 0 HP regain 1 HP at start of turn",
+        "source": "Oath spell",
+        "always_prepared": true
+      },
+      "guardian_of_faith": {
+        "name": "Guardian of Faith",
+        "level": 4,
+        "school": "conjuration",
+        "casting_time": "1 action",
+        "range": "30 feet",
+        "duration": "8 hours",
+        "components": "V",
+        "description": "Spectral guardian deals 20 radiant damage to enemies that approach",
+        "source": "Oath spell",
+        "always_prepared": true
+      }
+    }
+  },
+  "features": {
+    "channel_divinity": {
+      "name": "Channel Divinity",
+      "uses": 2,
+      "uses_max": 2,
+      "recharge": "short_rest",
+      "options": {
+        "sacred_weapon": {
+          "name": "Sacred Weapon",
+          "description": "+5 to attack rolls, weapon sheds light, 1 minute duration"
+        },
+        "turn_the_unholy": {
+          "name": "Turn the Unholy",
+          "description": "Fiends and undead within 30ft must make Wisdom save (DC 17) or be turned"
+        }
+      }
+    },
+    "lay_on_hands": {
+      "name": "Lay on Hands",
+      "pool": 60,
+      "pool_max": 60,
+      "recharge": "long_rest",
+      "description": "Heal HP or cure disease/poison (5 HP per disease/poison)"
+    },
+    "divine_sense": {
+      "name": "Divine Sense",
+      "uses": 6,
+      "uses_max": 6,
+      "recharge": "long_rest",
+      "description": "Detect celestials, fiends, undead within 60ft as action"
+    },
+    "healing_hands": {
+      "name": "Healing Hands",
+      "uses": 1,
+      "uses_max": 1,
+      "recharge": "long_rest",
+      "healing": "4d4",
+      "description": "Aasimar racial healing ability"
+    },
+    "radiant_soul": {
+      "name": "Radiant Soul",
+      "uses": 1,
+      "uses_max": 1,
+      "recharge": "long_rest",
+      "duration": "1 minute",
+      "description": "Bonus action: gain 30ft fly speed, +4 radiant damage once per turn"
+    },
+    "aura_of_protection": {
+      "name": "Aura of Protection",
+      "range": 10,
+      "bonus": 5,
+      "description": "+5 to saving throws for you and allies within 10ft"
+    },
+    "aura_of_courage": {
+      "name": "Aura of Courage",
+      "range": 10,
+      "description": "You and allies within 10ft can't be frightened"
+    },
+    "aura_of_devotion": {
+      "name": "Aura of Devotion",
+      "range": 10,
+      "description": "You and allies within 10ft can't be charmed"
+    },
+    "divine_smite": {
+      "name": "Divine Smite",
+      "description": "Expend spell slot for +2d8 to 5d8 radiant damage on melee hit"
+    },
+    "improved_divine_smite": {
+      "name": "Improved Divine Smite",
+      "damage": "1d8",
+      "damage_type": "radiant",
+      "description": "All melee weapon hits deal +1d8 radiant damage"
+    }
+  },
+  "inventory": {
+    "notes": "Inventaire : --------------------------------------------------------------\n\nArmure de plaques +1 (portée)\nBouclier Sentinelle (porté)\nÉpée de cristal (équipée)\nAnneau de résistance au froid (porté)\nPeriapt of Wound Closure (porté au cou)\n6 diamond noir\nhuile d'affutage\n\nNote : --------------------------------------------------------------------\n\n",
+    "currency": {
+      "copper": 0,
+      "silver": 0,
+      "electrum": 0,
+      "gold": 2405,
+      "platinum": 71
+    }
+  }
+}
