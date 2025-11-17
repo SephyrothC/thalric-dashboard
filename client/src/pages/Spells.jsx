@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useCharacterStore } from '../store/characterStore';
+import SpellDetailsModal from '../components/spells/SpellDetailsModal';
 
 export default function Spells() {
   const { character, castSpell } = useCharacterStore();
+  const [selectedSpell, setSelectedSpell] = useState(null);
   
   if (!character || !character.data) {
     return <div className="text-white p-6">Loading character data...</div>;
@@ -99,10 +102,21 @@ export default function Spells() {
               <div className="space-y-2">
                 {levelSpells && levelSpells.length > 0 ? (
                   levelSpells.map((spell, idx) => (
-                    <div key={idx} className="bg-dark-bg p-3 rounded-lg hover:bg-dark-light transition-colors">
-                      <div className="font-bold text-white">{spell.name || 'Unnamed Spell'}</div>
-                      <div className="text-sm text-gray-400">{spell.description || 'No description'}</div>
-                      {spell.level && <div className="text-xs text-gold-secondary mt-1">Level {spell.level}</div>}
+                    <div
+                      key={idx}
+                      className="bg-dark-bg p-3 rounded-lg hover:bg-dark-light transition-colors cursor-pointer border-2 border-transparent hover:border-gold-primary"
+                      onClick={() => setSelectedSpell(spell)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-bold text-white">{spell.name || 'Unnamed Spell'}</div>
+                          <div className="text-sm text-gray-400 line-clamp-2">{spell.description || 'No description'}</div>
+                          {spell.level !== undefined && <div className="text-xs text-gold-secondary mt-1">Level {spell.level}</div>}
+                        </div>
+                        <button className="ml-3 px-3 py-1 bg-gold-primary hover:bg-gold-secondary text-dark-bg text-sm font-bold rounded transition-colors">
+                          View
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -113,6 +127,38 @@ export default function Spells() {
           ))
         )}
       </div>
+
+      {/* Spell Details Modal */}
+      <SpellDetailsModal
+        spell={selectedSpell}
+        onClose={() => setSelectedSpell(null)}
+        onCast={async (spell) => {
+          if (spell.level > 0) {
+            await handleCastSpell(spell.level);
+            // Optionally start concentration if spell requires it
+            if (spell.duration && spell.duration.includes('Concentration')) {
+              try {
+                // Extract duration in rounds (assuming duration is like "Concentration, up to 10 minutes")
+                const durationMatch = spell.duration.match(/(\d+)\s*(minute|hour)/);
+                let rounds = 10; // default
+                if (durationMatch) {
+                  const value = parseInt(durationMatch[1]);
+                  const unit = durationMatch[2];
+                  rounds = unit === 'hour' ? value * 600 : value * 10; // 1 minute = 10 rounds
+                }
+
+                await fetch('/api/combat/concentration/start', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ spell: spell.name, duration: rounds })
+                });
+              } catch (error) {
+                console.error('Failed to start concentration:', error);
+              }
+            }
+          }
+        }}
+      />
     </div>
   );
 }

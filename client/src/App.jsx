@@ -2,14 +2,23 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useCharacterStore } from './store/characterStore';
 import { useSocket } from './hooks/useSocket';
+import { useToast, setGlobalToastHandler } from './hooks/useToast';
+import { ToastContainer } from './components/ui/Toast';
+import HPDisplay from './components/ui/HPDisplay';
 import Combat from './pages/Combat';
 import Spells from './pages/Spells';
 import Inventory from './pages/Inventory';
 import Viewer from './pages/Viewer';
 
 function App() {
-  const { character, fetchCharacter } = useCharacterStore();
+  const { character, fetchCharacter, updateHP } = useCharacterStore();
   const { isConnected } = useSocket();
+  const toast = useToast();
+
+  // Set global toast handler for easy access
+  useEffect(() => {
+    setGlobalToastHandler(toast);
+  }, [toast]);
 
   useEffect(() => {
     fetchCharacter();
@@ -32,18 +41,30 @@ function App() {
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/viewer" element={<Viewer />} />
       </Routes>
+
+      {/* Global Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
     </BrowserRouter>
   );
 }
 
 function Layout({ children }) {
-  const { character } = useCharacterStore();
+  const { character, updateHP } = useCharacterStore();
   const { isConnected } = useSocket();
   const stats = character?.data?.stats || {};
 
+  const handleQuickHeal = () => {
+    // Open Lay on Hands dialog or quick heal
+    const healAmount = prompt('Enter heal amount (Lay on Hands pool: 70):');
+    if (healAmount && !isNaN(healAmount)) {
+      const newHP = Math.min(stats.hp_current + parseInt(healAmount), stats.hp_max);
+      updateHP(newHP, stats.temp_hp || 0);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen">
-      <header className="bg-gradient-to-r from-dark-medium to-dark-light border-b-4 border-gold-primary p-4 shadow-lg">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-dark-medium to-dark-light border-b-4 border-gold-primary p-4 shadow-lg">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div>
@@ -57,9 +78,14 @@ function Layout({ children }) {
                 <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className="text-sm text-gray-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
               </div>
-              <div className="bg-dark-bg px-4 py-2 rounded-lg border-2 border-red-600">
-                <span className="text-red-400 font-bold">HP: {stats.hp_current}/{stats.hp_max}</span>
-              </div>
+              <HPDisplay
+                current={stats.hp_current || 0}
+                max={stats.hp_max || 117}
+                tempHP={stats.temp_hp || 0}
+                size="compact"
+                onHeal={handleQuickHeal}
+                showQuickActions={false}
+              />
             </div>
           </div>
           <nav className="mt-4 flex gap-2">

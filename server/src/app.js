@@ -9,6 +9,7 @@ const { initDatabase } = require('./db/database');
 const characterRoutes = require('./routes/character');
 const diceRoutes = require('./routes/dice');
 const spellsRoutes = require('./routes/spells');
+const combatRoutes = require('./routes/combat');
 
 // Initialize Express app
 const app = express();
@@ -46,6 +47,7 @@ initDatabase();
 app.use('/api/character', characterRoutes);
 app.use('/api/dice', diceRoutes(io)); // Pass io to dice routes for broadcasting
 app.use('/api/spells', spellsRoutes);
+app.use('/api/combat', combatRoutes(io)); // Pass io for real-time combat updates
 
 // Health check
 app.get('/api/health', (req, res) => {

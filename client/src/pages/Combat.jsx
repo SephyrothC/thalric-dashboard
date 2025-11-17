@@ -1,12 +1,23 @@
 import { useState } from 'react';
 import { useCharacterStore } from '../store/characterStore';
 import { useDice } from '../hooks/useDice';
+import CombatTracker from '../components/combat/CombatTracker';
+import DeathSaves from '../components/combat/DeathSaves';
+import ConcentrationBar from '../components/combat/ConcentrationBar';
+import ConditionsTracker from '../components/combat/ConditionsTracker';
+import ShortRestDialog from '../components/combat/ShortRestDialog';
+import LayOnHandsDialog from '../components/combat/LayOnHandsDialog';
+import FeatureDetailsModal from '../components/combat/FeatureDetailsModal';
 
 export default function Combat() {
   const { character, updateHP, shortRest, longRest, useFeature } = useCharacterStore();
   const { rollAttack, rollDamage, rollDice, rolling } = useDice();
   const [hpInput, setHpInput] = useState('');
   const [divineSmiteLevel, setDivineSmiteLevel] = useState(1);
+  const [showShortRestDialog, setShowShortRestDialog] = useState(false);
+  const [showLayOnHandsDialog, setShowLayOnHandsDialog] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState(null);
+  const [selectedFeatureId, setSelectedFeatureId] = useState(null);
 
   const stats = character?.data?.stats || {};
   const weapons = character?.data?.weapons || {};
@@ -45,6 +56,16 @@ export default function Combat() {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gold-primary mb-6">⚔️ Combat & Stats</h2>
+
+      {/* Phase 1 Combat Features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CombatTracker />
+        <ConcentrationBar />
+      </div>
+
+      <DeathSaves />
+
+      <ConditionsTracker />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Stats Card */}
@@ -94,8 +115,8 @@ export default function Combat() {
             <button onClick={() => handleHPChange(10)} className="btn-secondary flex-1">+10</button>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => shortRest()} className="btn-primary flex-1">Short Rest</button>
-            <button onClick={() => longRest()} className="btn-primary flex-1">Long Rest</button>
+            <button onClick={() => setShowShortRestDialog(true)} className="btn-primary flex-1">⏱️ Short Rest</button>
+            <button onClick={() => longRest()} className="btn-primary flex-1">🌙 Long Rest</button>
           </div>
         </div>
       </div>
@@ -148,25 +169,66 @@ export default function Combat() {
         <div className="space-y-3">
           {Object.entries(features).map(([featureId, feature]) => (
             <div key={featureId} className="bg-dark-bg p-3 rounded-lg flex justify-between items-center">
-              <div>
+              <div className="flex-1">
                 <h4 className="font-bold text-gold-secondary">{feature.name}</h4>
-                <p className="text-sm text-gray-400">{feature.description}</p>
+                <p className="text-sm text-gray-400 line-clamp-2">{feature.description}</p>
               </div>
-              <div className="text-right">
-                {feature.uses !== undefined && (
-                  <>
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  {feature.uses !== undefined && (
                     <div className="text-white font-bold">{feature.uses}/{feature.uses_max}</div>
-                    <button onClick={() => useFeature(featureId)} disabled={feature.uses <= 0} className="btn-primary text-sm mt-1">Use</button>
-                  </>
-                )}
-                {feature.pool !== undefined && (
-                  <div className="text-white font-bold">{feature.pool}/{feature.pool_max}</div>
+                  )}
+                  {feature.pool !== undefined && (
+                    <div className="text-white font-bold">{feature.pool}/{feature.pool_max}</div>
+                  )}
+                </div>
+                {featureId === 'lay_on_hands' ? (
+                  <button
+                    onClick={() => setShowLayOnHandsDialog(true)}
+                    disabled={feature.pool <= 0}
+                    className="px-3 py-1 bg-gold-primary hover:bg-gold-secondary text-dark-bg text-sm font-bold rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Use
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedFeature(feature);
+                      setSelectedFeatureId(featureId);
+                    }}
+                    className="px-3 py-1 bg-gold-primary hover:bg-gold-secondary text-dark-bg text-sm font-bold rounded transition-colors"
+                  >
+                    View
+                  </button>
                 )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Short Rest Dialog */}
+      <ShortRestDialog
+        isOpen={showShortRestDialog}
+        onClose={() => setShowShortRestDialog(false)}
+      />
+
+      {/* Lay on Hands Dialog */}
+      <LayOnHandsDialog
+        isOpen={showLayOnHandsDialog}
+        onClose={() => setShowLayOnHandsDialog(false)}
+      />
+
+      {/* Feature Details Modal */}
+      <FeatureDetailsModal
+        feature={selectedFeature}
+        featureId={selectedFeatureId}
+        onClose={() => {
+          setSelectedFeature(null);
+          setSelectedFeatureId(null);
+        }}
+        onUse={(featureId) => useFeature(featureId)}
+      />
     </div>
   );
 }

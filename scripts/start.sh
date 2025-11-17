@@ -11,26 +11,29 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Get script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Check if node_modules exists
-if [ ! -d "../server/node_modules" ] || [ ! -d "../client/node_modules" ]; then
+if [ ! -d "$PROJECT_ROOT/server/node_modules" ] || [ ! -d "$PROJECT_ROOT/client/node_modules" ]; then
     echo -e "${YELLOW}📦 Installing dependencies...${NC}"
 
     # Install server dependencies
     echo "Installing server dependencies..."
-    cd ../server && npm install
+    cd "$PROJECT_ROOT/server" && npm install
 
     # Install client dependencies
     echo "Installing client dependencies..."
-    cd ../client && npm install
+    cd "$PROJECT_ROOT/client" && npm install
 
-    cd ../scripts
     echo -e "${GREEN}✅ Dependencies installed!${NC}"
     echo ""
 fi
 
 # Build client
 echo -e "${YELLOW}🔨 Building frontend...${NC}"
-cd ../client && npm run build
+cd "$PROJECT_ROOT/client" && npm run build
 echo -e "${GREEN}✅ Frontend built!${NC}"
 echo ""
 
@@ -48,4 +51,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-cd ../server && npm start
+cd "$PROJECT_ROOT/server" && npm start

@@ -105,19 +105,26 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   // Use feature (Channel Divinity, Lay on Hands, etc.)
-  useFeature: async (feature, amount = 1) => {
+  useFeature: async (feature, options = {}) => {
     try {
+      // Support both old format (number) and new format (object)
+      const body = typeof options === 'number'
+        ? { feature, amount: options }
+        : { feature, ...options };
+
       const response = await fetch(`${API_URL}/api/character/feature/use`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feature, amount })
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) throw new Error('Failed to use feature');
 
       await get().fetchCharacter(); // Refresh character data
+      return true;
     } catch (error) {
       console.error('Error using feature:', error);
+      return false;
     }
   },
 

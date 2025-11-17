@@ -101,6 +101,7 @@ router.patch('/hp', (req, res) => {
 router.post('/rest/short', (req, res) => {
   try {
     const db = getDb();
+    const { hit_dice_spent } = req.body;
     const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
 
     if (!character) {
@@ -108,10 +109,37 @@ router.post('/rest/short', (req, res) => {
     }
 
     const data = JSON.parse(character.data);
+    const level = data.character_info.level || 14;
+    const conMod = Math.floor((data.stats.constitution - 10) / 2); // +2 for Thalric
+    const restored = [];
 
     // Restore short rest features
     if (data.features.channel_divinity) {
       data.features.channel_divinity.uses = data.features.channel_divinity.uses_max;
+      restored.push('Channel Divinity');
+    }
+
+    // Hit Dice healing
+    let totalHealing = 0;
+    let hitDiceRolls = [];
+
+    if (hit_dice_spent && hit_dice_spent > 0) {
+      const diceToSpend = Math.min(hit_dice_spent, level);
+
+      for (let i = 0; i < diceToSpend; i++) {
+        const roll = Math.floor(Math.random() * 10) + 1; // 1d10
+        const healing = roll + conMod;
+        hitDiceRolls.push({ roll, healing });
+        totalHealing += healing;
+      }
+
+      // Apply healing (can't exceed max HP)
+      const currentHP = data.stats.hp_current || 0;
+      const maxHP = data.stats.hp_max || 117;
+      const newHP = Math.min(currentHP + totalHealing, maxHP);
+      data.stats.hp_current = newHP;
+
+      restored.push(`${diceToSpend} Hit Dice (${totalHealing} HP)`);
     }
 
     const stmt = db.prepare(`
@@ -125,7 +153,12 @@ router.post('/rest/short', (req, res) => {
     res.json({
       success: true,
       message: 'Short rest completed',
-      restored: ['Channel Divinity']
+      restored,
+      healing: {
+        total: totalHealing,
+        rolls: hitDiceRolls,
+        newHP: data.stats.hp_current
+      }
     });
   } catch (error) {
     console.error('Error performing short rest:', error);
@@ -192,7 +225,7 @@ router.post('/rest/long', (req, res) => {
 // Use feature (Channel Divinity, Lay on Hands, etc.)
 router.post('/feature/use', (req, res) => {
   try {
-    const { feature, amount } = req.body;
+    const { feature, amount, action } = req.body;
 
     if (!feature) {
       return res.status(400).json({ error: 'Missing feature name' });
@@ -206,6 +239,7 @@ router.post('/feature/use', (req, res) => {
     }
 
     const data = JSON.parse(character.data);
+    let responseData = { success: true };
 
     // Handle different features
     if (feature === 'lay_on_hands') {
@@ -217,6 +251,23 @@ router.post('/feature/use', (req, res) => {
       }
 
       data.features.lay_on_hands.pool -= useAmount;
+
+      // If healing action, also heal HP
+      if (action === 'heal') {
+        const currentHP = data.stats.hp_current || 0;
+        const maxHP = data.stats.hp_max || 117;
+        const actualHealing = Math.min(useAmount, maxHP - currentHP);
+
+        data.stats.hp_current = Math.min(currentHP + useAmount, maxHP);
+
+        responseData.healing = {
+          amount: actualHealing,
+          newHP: data.stats.hp_current
+        };
+      }
+
+      responseData.message = action === 'cure' ? 'Disease/Poison cured' : `Healed ${useAmount} HP`;
+      responseData.remaining = data.features.lay_on_hands.pool;
     } else if (data.features[feature]) {
       const featureData = data.features[feature];
 
@@ -225,6 +276,8 @@ router.post('/feature/use', (req, res) => {
       }
 
       featureData.uses -= 1;
+      responseData.message = `${feature} used`;
+      responseData.remaining = featureData.uses;
     } else {
       return res.status(400).json({ error: 'Unknown feature' });
     }
@@ -237,11 +290,7 @@ router.post('/feature/use', (req, res) => {
 
     stmt.run(JSON.stringify(data));
 
-    res.json({
-      success: true,
-      message: `${feature} used`,
-      remaining: data.features[feature]?.uses || data.features[feature]?.pool
-    });
+    res.json(responseData);
   } catch (error) {
     console.error('Error using feature:', error);
     res.status(500).json({ error: 'Failed to use feature' });
