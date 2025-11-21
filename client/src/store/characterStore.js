@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
-const API_URL = 'http://localhost:3000';
+// Use relative URL to work from any device on the network
+const API_URL = window.location.origin;
 
 export const useCharacterStore = create((set, get) => ({
   character: null,

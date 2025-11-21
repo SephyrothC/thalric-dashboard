@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
-const API_URL = 'http://localhost:3000';
+// Use relative URL to work from any device on the network
+const API_URL = window.location.origin;
 
 export function useDice() {
   const [rolling, setRolling] = useState(false);

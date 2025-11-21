@@ -1,5 +1,19 @@
+import { useEffect } from 'react';
+
 export default function SpellDetailsModal({ spell, onClose, onCast }) {
   if (!spell) return null;
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const getDurationText = (duration) => {
     if (duration && duration.includes('Concentration')) {

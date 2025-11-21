@@ -183,3 +183,4 @@ node_modules
 data/
 
 /v2/server/node_modules
+.claude/settings.local.json

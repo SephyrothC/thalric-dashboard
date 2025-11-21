@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3000';
+// Use window.location.origin to work from any device on the network
+const SOCKET_URL = window.location.origin;
 
 let socket = null;
 

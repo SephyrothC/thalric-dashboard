@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCharacterStore } from '../../store/characterStore';
 import { toast } from '../../hooks/useToast';
 
@@ -14,6 +14,20 @@ export default function ShortRestDialog({ isOpen, onClose }) {
   const currentHP = stats.hp_current || 0;
   const maxHP = stats.hp_max || 117;
   const hpMissing = maxHP - currentHP;
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
