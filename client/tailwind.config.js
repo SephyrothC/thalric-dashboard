@@ -7,21 +7,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        gold: {
-          primary: '#d4af37',
-          secondary: '#f4e09a',
-        },
+        // Base Dark Theme
         dark: {
-          bg: '#1a1a1a',
-          medium: '#2d2d2d',
-          light: '#3a3a3a',
+          bg: '#0f172a',      // Slate 900 - Deep background
+          surface: '#1e293b', // Slate 800 - Card background
+          border: '#334155',  // Slate 700 - Borders
+          hover: '#334155',   // Slate 700 - Hover states
         },
-        critical: '#ff6b35',
-        fumble: '#ff3838',
+        // Brand Colors
+        gold: {
+          dim: '#b45309',     // Amber 700 - Muted gold
+          primary: '#f59e0b', // Amber 500 - Main accent
+          glow: '#fcd34d',    // Amber 300 - Highlights
+        },
+        // Semantic Colors
+        combat: {
+          attack: '#ef4444',  // Red 500
+          heal: '#10b981',    // Emerald 500
+          magic: '#6366f1',   // Indigo 500
+        }
       },
       fontFamily: {
-        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+        display: ['Cinzel', 'Segoe UI', 'serif'], // Suggestion for headers if font is added later
       },
+      boxShadow: {
+        'glow': '0 0 15px -3px rgba(245, 158, 11, 0.3)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15)',
+      }
     },
   },
   plugins: [],
