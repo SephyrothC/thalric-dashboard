@@ -7,6 +7,7 @@ import ConcentrationBar from '../components/combat/ConcentrationBar';
 import ConditionsTracker from '../components/combat/ConditionsTracker';
 import ShortRestDialog from '../components/combat/ShortRestDialog';
 import LayOnHandsDialog from '../components/combat/LayOnHandsDialog';
+import TempHPDialog from '../components/combat/TempHPDialog';
 import FeatureDetailsModal from '../components/combat/FeatureDetailsModal';
 
 export default function Combat() {
@@ -16,6 +17,7 @@ export default function Combat() {
   const [divineSmiteLevel, setDivineSmiteLevel] = useState(1);
   const [showShortRestDialog, setShowShortRestDialog] = useState(false);
   const [showLayOnHandsDialog, setShowLayOnHandsDialog] = useState(false);
+  const [showTempHPDialog, setShowTempHPDialog] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [selectedFeatureId, setSelectedFeatureId] = useState(null);
 
@@ -113,6 +115,9 @@ export default function Combat() {
             <button onClick={() => handleHPChange(-5)} className="btn-secondary flex-1">-5</button>
             <button onClick={() => handleHPChange(5)} className="btn-secondary flex-1">+5</button>
             <button onClick={() => handleHPChange(10)} className="btn-secondary flex-1">+10</button>
+          </div>
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setShowTempHPDialog(true)} className="btn-secondary flex-1">🛡️ Temp HP</button>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowShortRestDialog(true)} className="btn-primary flex-1">⏱️ Short Rest</button>
@@ -217,6 +222,12 @@ export default function Combat() {
       <LayOnHandsDialog
         isOpen={showLayOnHandsDialog}
         onClose={() => setShowLayOnHandsDialog(false)}
+      />
+
+      {/* Temp HP Dialog */}
+      <TempHPDialog
+        isOpen={showTempHPDialog}
+        onClose={() => setShowTempHPDialog(false)}
       />
 
       {/* Feature Details Modal */}
