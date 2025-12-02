@@ -133,7 +133,12 @@ export const useCharacterStore = create((set, get) => ({
   castSpell: async (spellOrLevel) => {
     try {
       const body = typeof spellOrLevel === 'object' 
-        ? { spellLevel: spellOrLevel.level, name: spellOrLevel.name, duration: spellOrLevel.duration }
+        ? { 
+            spellLevel: spellOrLevel.level, 
+            name: spellOrLevel.name, 
+            duration: spellOrLevel.duration,
+            concentration: spellOrLevel.concentration || spellOrLevel.duration?.toLowerCase().includes('concentration')
+          }
         : { spellLevel: spellOrLevel };
 
       const response = await fetch(`${API_URL}/api/spells/cast`, {

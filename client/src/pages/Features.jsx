@@ -3,11 +3,15 @@ import { useCharacterStore } from '../store/characterStore';
 import FeaturesList from '../components/features/FeaturesList';
 import LayOnHandsDialog from '../components/combat/LayOnHandsDialog';
 import ChannelDivinityDialog from '../components/combat/ChannelDivinityDialog';
+import ShortRestDialog from '../components/combat/ShortRestDialog';
+import LongRestDialog from '../components/combat/LongRestDialog';
 
 export default function Features() {
-  const { character, useFeature, shortRest, longRest } = useCharacterStore();
+  const { character, useFeature } = useCharacterStore();
   const [isLayOnHandsOpen, setLayOnHandsOpen] = useState(false);
   const [isChannelDivinityOpen, setChannelDivinityOpen] = useState(false);
+  const [isShortRestOpen, setShortRestOpen] = useState(false);
+  const [isLongRestOpen, setLongRestOpen] = useState(false);
 
   // --- Data Normalization ---
   const features = useMemo(() => {
@@ -82,16 +86,16 @@ export default function Features() {
         {/* Rest Actions */}
         <div className="flex gap-3">
           <button 
-            onClick={() => window.confirm('Short Rest?') && shortRest()}
+            onClick={() => setShortRestOpen(true)}
             className="px-4 py-2 bg-dark-surface hover:bg-blue-900/30 border border-dark-border hover:border-blue-500 text-blue-400 rounded-lg font-bold transition-all flex items-center gap-2"
           >
             <span>☕</span> Short Rest
           </button>
           <button 
-            onClick={() => window.confirm('Long Rest?') && longRest()}
+            onClick={() => setLongRestOpen(true)}
             className="px-4 py-2 bg-dark-surface hover:bg-purple-900/30 border border-dark-border hover:border-purple-500 text-purple-400 rounded-lg font-bold transition-all flex items-center gap-2"
           >
-            <span>⛺</span> Long Rest
+            <span>🌙</span> Long Rest
           </button>
         </div>
       </div>
@@ -109,6 +113,14 @@ export default function Features() {
       <ChannelDivinityDialog 
         isOpen={isChannelDivinityOpen} 
         onClose={() => setChannelDivinityOpen(false)} 
+      />
+      <ShortRestDialog 
+        isOpen={isShortRestOpen} 
+        onClose={() => setShortRestOpen(false)} 
+      />
+      <LongRestDialog 
+        isOpen={isLongRestOpen} 
+        onClose={() => setLongRestOpen(false)} 
       />
     </div>
   );

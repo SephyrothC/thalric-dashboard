@@ -51,14 +51,14 @@ router.get('/', (req, res) => {
 // Cast spell (consume spell slot)
 router.post('/cast', (req, res) => {
   try {
-    const { spellLevel, name, duration } = req.body;
+    const { spellLevel, name, duration, concentration } = req.body;
 
     if (!spellLevel || spellLevel < 1 || spellLevel > 9) {
       return res.status(400).json({ error: 'Invalid spell level' });
     }
 
     const db = getDb();
-    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+    const character = db.prepare('SELECT * FROM character WHERE id = 1').get();
 
     if (!character) {
       return res.status(404).json({ error: 'Character not found' });
@@ -73,6 +73,41 @@ router.post('/cast', (req, res) => {
       return res.status(400).json({ error: 'No spell slots available for this level' });
     }
 
+    // Handle Concentration
+    let previousConcentration = null;
+    const isConcentration = concentration || (duration && duration.toLowerCase().includes('concentration'));
+    
+    if (isConcentration) {
+      // Check if already concentrating
+      if (character.concentration_spell) {
+        previousConcentration = character.concentration_spell;
+        
+        // Remove the old concentration spell from conditions
+        db.prepare(`
+          UPDATE conditions 
+          SET active = 0 
+          WHERE character_id = 1 AND name = ? AND active = 1
+        `).run(character.concentration_spell);
+        
+        io.emit('concentration_ended', { spell: character.concentration_spell, reason: 'new_spell' });
+      }
+      
+      // Parse duration for concentration tracking
+      const rounds = parseDuration(duration);
+      
+      // Start new concentration
+      db.prepare(`
+        UPDATE character
+        SET concentration_spell = ?,
+            concentration_duration = ?,
+            concentration_rounds_left = ?,
+            concentration_dc = 10
+        WHERE id = 1
+      `).run(name, rounds, rounds);
+      
+      io.emit('concentration_started', { spell: name, duration: rounds });
+    }
+
     // Consume spell slot
     data.spellcasting.spell_slots_current[spellLevel] -= 1;
 
@@ -84,7 +119,7 @@ router.post('/cast', (req, res) => {
 
     stmt.run(JSON.stringify(data));
 
-    // Add condition if duration is present
+    // Add condition if duration is present (for tracking buff effects)
     if (duration && name) {
       const rounds = parseDuration(duration);
       if (rounds) {
@@ -116,7 +151,9 @@ router.post('/cast', (req, res) => {
     res.json({
       success: true,
       message: `Spell slot level ${spellLevel} consumed`,
-      remaining: data.spellcasting.spell_slots_current[spellLevel]
+      remaining: data.spellcasting.spell_slots_current[spellLevel],
+      concentration: isConcentration,
+      previousConcentration
     });
   } catch (error) {
     console.error('Error casting spell:', error);

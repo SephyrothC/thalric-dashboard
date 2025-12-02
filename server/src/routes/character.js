@@ -399,6 +399,53 @@ router.delete('/conditions/:name', (req, res) => {
   }
 });
 
+// Update currency/money
+router.patch('/money', (req, res) => {
+  try {
+    const { money } = req.body;
+
+    if (!money) {
+      return res.status(400).json({ error: 'Missing money data' });
+    }
+
+    const db = getDb();
+    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const data = JSON.parse(character.data);
+    
+    // Update money values (validate non-negative)
+    data.money = {
+      pp: Math.max(0, parseInt(money.pp) || 0),
+      gp: Math.max(0, parseInt(money.gp) || 0),
+      ep: Math.max(0, parseInt(money.ep) || 0),
+      sp: Math.max(0, parseInt(money.sp) || 0),
+      cp: Math.max(0, parseInt(money.cp) || 0)
+    };
+
+    const stmt = db.prepare(`
+      UPDATE character
+      SET data = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+
+    stmt.run(JSON.stringify(data));
+
+    io.emit('currency_updated', data.money);
+
+    res.json({
+      success: true,
+      money: data.money
+    });
+  } catch (error) {
+    console.error('Error updating money:', error);
+    res.status(500).json({ error: 'Failed to update money' });
+  }
+});
+
 // Save session notes
 router.post('/notes', (req, res) => {
   try {

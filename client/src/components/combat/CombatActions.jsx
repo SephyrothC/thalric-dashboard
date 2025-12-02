@@ -3,10 +3,12 @@ import { useCharacterStore } from '../../store/characterStore';
 import { useDice } from '../../hooks/useDice';
 import ChannelDivinityDialog from './ChannelDivinityDialog';
 import DivineSmiteDialog from './DivineSmiteDialog';
+import HealingHandsDialog from './HealingHandsDialog';
 
 export default function CombatActions() {
   const [activeTab, setActiveTab] = useState('attacks'); // attacks | spells | features
   const [isChannelDivinityOpen, setChannelDivinityOpen] = useState(false);
+  const [isHealingHandsOpen, setHealingHandsOpen] = useState(false);
   const [smiteWeaponId, setSmiteWeaponId] = useState(null);
   const { character, useFeature, castSpell } = useCharacterStore();
   const { rollAttack, rollDamage, rolling } = useDice();
@@ -177,6 +179,8 @@ export default function CombatActions() {
                   onClick={() => {
                     if (id === 'channel_divinity') {
                       setChannelDivinityOpen(true);
+                    } else if (id === 'healing_hands') {
+                      setHealingHandsOpen(true);
                     } else {
                       useFeature(id, { name: feature.name, duration: feature.duration });
                     }
@@ -200,6 +204,11 @@ export default function CombatActions() {
         isOpen={!!smiteWeaponId} 
         onClose={() => setSmiteWeaponId(null)} 
         weaponId={smiteWeaponId}
+      />
+
+      <HealingHandsDialog 
+        isOpen={isHealingHandsOpen} 
+        onClose={() => setHealingHandsOpen(false)} 
       />
     </div>
   );

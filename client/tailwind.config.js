@@ -11,6 +11,8 @@ export default {
         dark: {
           bg: '#0f172a',      // Slate 900 - Deep background
           surface: '#1e293b', // Slate 800 - Card background
+          medium: '#1e293b',  // Alias for surface (used in modals)
+          light: '#334155',   // Slate 700 - Lighter surfaces
           border: '#334155',  // Slate 700 - Borders
           hover: '#334155',   // Slate 700 - Hover states
         },

@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useCharacterStore } from '../store/characterStore';
 
 export default function Inventory() {
-  const { character } = useCharacterStore();
+  const { character, fetchCharacter } = useCharacterStore();
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(''); // 'success' or 'error'
+  const [editingCurrency, setEditingCurrency] = useState(null);
+  const [currencyValue, setCurrencyValue] = useState('');
+  const [savingCurrency, setSavingCurrency] = useState(false);
   
   // Charger les notes au montage du composant
   useEffect(() => {
@@ -44,6 +47,49 @@ export default function Inventory() {
     cp: 'CP'
   };
 
+  // Handle currency edit
+  const handleCurrencyClick = (coin) => {
+    setEditingCurrency(coin);
+    setCurrencyValue(currencies[coin].toString());
+  };
+
+  const handleCurrencyChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setCurrencyValue(value);
+  };
+
+  const handleCurrencySave = async () => {
+    if (editingCurrency === null) return;
+    
+    setSavingCurrency(true);
+    try {
+      const newMoney = { ...currencies, [editingCurrency]: parseInt(currencyValue) || 0 };
+      
+      const response = await fetch(`${window.location.origin}/api/character/money`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ money: newMoney })
+      });
+
+      if (!response.ok) throw new Error('Failed to save currency');
+
+      await fetchCharacter();
+      setEditingCurrency(null);
+    } catch (error) {
+      console.error('Error saving currency:', error);
+    } finally {
+      setSavingCurrency(false);
+    }
+  };
+
+  const handleCurrencyKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleCurrencySave();
+    } else if (e.key === 'Escape') {
+      setEditingCurrency(null);
+    }
+  };
+
   // Sauvegarder les notes
   const handleSaveNotes = async () => {
     setSaving(true);
@@ -80,12 +126,30 @@ export default function Inventory() {
         <h3 className="text-xl font-bold text-gold-primary mb-4">💰 Currency</h3>
         <div className="grid grid-cols-5 gap-4">
           {Object.entries(currencies).map(([coin, amount]) => (
-            <div key={coin} className="bg-dark-bg p-4 rounded-lg text-center hover:bg-dark-light transition-colors">
+            <div 
+              key={coin} 
+              className="bg-dark-bg p-4 rounded-lg text-center hover:bg-dark-light transition-colors cursor-pointer"
+              onClick={() => !editingCurrency && handleCurrencyClick(coin)}
+            >
               <div className="text-gold-secondary font-bold text-sm mb-2">{currencyNames[coin]}</div>
-              <div className="text-2xl font-bold text-white">{amount}</div>
+              {editingCurrency === coin ? (
+                <input
+                  type="text"
+                  value={currencyValue}
+                  onChange={handleCurrencyChange}
+                  onKeyDown={handleCurrencyKeyDown}
+                  onBlur={handleCurrencySave}
+                  autoFocus
+                  disabled={savingCurrency}
+                  className="w-full text-2xl font-bold text-black text-center bg-white border-2 border-gold-primary rounded outline-none"
+                />
+              ) : (
+                <div className="text-2xl font-bold text-white">{amount}</div>
+              )}
             </div>
           ))}
         </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">Click on a value to edit</p>
       </div>
 
       {/* Equipment */}

@@ -23,6 +23,7 @@ export default function Combat() {
         {/* LEFT: Vitals & Status (3 cols) */}
         <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-1">
           <CombatVitals />
+          
           <div className="bg-dark-surface rounded-xl border border-dark-border p-3">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase mb-2">Active Conditions</h4>
             <ConditionsTracker />

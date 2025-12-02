@@ -1,9 +1,10 @@
 import { useCharacterStore } from '../../store/characterStore';
 import { useDice } from '../../hooks/useDice';
+import { toast } from '../../hooks/useToast';
 import HPDisplay from '../ui/HPDisplay';
 
 export default function CombatVitals() {
-  const { character, updateHP } = useCharacterStore();
+  const { character, updateHP, fetchCharacter } = useCharacterStore();
   const { rollDice, rolling } = useDice();
   const stats = character?.data?.stats || {};
   const saves = character?.data?.saving_throws || {};
@@ -14,9 +15,50 @@ export default function CombatVitals() {
     if (amount) updateHP(Math.min(stats.hp_max, stats.hp_current + parseInt(amount)), stats.temp_hp);
   };
 
-  const handleDamage = () => {
+  const handleDamage = async () => {
     const amount = prompt("Damage amount:");
-    if (amount) updateHP(Math.max(0, stats.hp_current - parseInt(amount)), stats.temp_hp);
+    if (!amount) return;
+    
+    const dmg = parseInt(amount);
+    updateHP(Math.max(0, stats.hp_current - dmg), stats.temp_hp);
+    
+    // Auto concentration save check
+    const concentration_spell = character?.concentration_spell;
+    if (concentration_spell && dmg > 0) {
+      // Calculate DC: max(10, damage/2)
+      const dc = Math.max(10, Math.floor(dmg / 2));
+      
+      // Get CON save bonus
+      const conSave = saves.constitution || 0;
+      
+      // Roll the save
+      const roll = Math.floor(Math.random() * 20) + 1;
+      const total = roll + conSave;
+      const success = total >= dc;
+      
+      // Notify via toast
+      if (success) {
+        toast.success(`🧠 Concentration maintenue! (${roll}+${conSave}=${total} vs DD${dc})`);
+      } else {
+        toast.error(`💔 Concentration brisée! (${roll}+${conSave}=${total} vs DD${dc})`);
+        
+        // End concentration
+        try {
+          await fetch('/api/combat/concentration/end', { method: 'DELETE' });
+          
+          // Also remove the condition
+          await fetch(`/api/combat/conditions/toggle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: concentration_spell })
+          });
+          
+          await fetchCharacter();
+        } catch (error) {
+          console.error('Failed to end concentration:', error);
+        }
+      }
+    }
   };
 
   const handleSaveRoll = (stat, mod) => {

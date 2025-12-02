@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCharacterStore } from '../../store/characterStore';
 import { useSocket } from '../../hooks/useSocket';
+import ConcentrationBar from './ConcentrationBar';
 
 export default function TurnCounter() {
   const { character, fetchCharacter } = useCharacterStore();
@@ -76,7 +77,10 @@ export default function TurnCounter() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-3">
+        {/* Concentration Indicator (compact) */}
+        <ConcentrationBar compact={true} />
+        
         <button 
           onClick={handleNextRound}
           className="px-3 py-1 bg-gold-primary hover:bg-gold-secondary text-dark-bg rounded-lg text-xs font-bold transition-colors shadow-glow flex items-center gap-2"

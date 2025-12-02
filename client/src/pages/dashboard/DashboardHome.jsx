@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { useCharacterStore } from '../../store/characterStore';
 import { Link } from 'react-router-dom';
+import ShortRestDialog from '../../components/combat/ShortRestDialog';
+import LongRestDialog from '../../components/combat/LongRestDialog';
 
 export default function DashboardHome() {
-  const { character, shortRest, longRest } = useCharacterStore();
+  const { character } = useCharacterStore();
+  const [showShortRestDialog, setShowShortRestDialog] = useState(false);
+  const [showLongRestDialog, setShowLongRestDialog] = useState(false);
   const stats = character?.data?.stats || {};
   const info = character?.data?.character_info || {};
   const features = character?.data?.features || {};
@@ -142,35 +147,27 @@ export default function DashboardHome() {
             <h3 className="text-lg font-bold text-white mb-4">Rest & Recovery</h3>
             <div className="space-y-3">
               <button 
-                onClick={() => {
-                  if(window.confirm('Take a Short Rest? This will reset short-rest abilities.')) {
-                    shortRest();
-                  }
-                }}
+                onClick={() => setShowShortRestDialog(true)}
                 className="w-full flex items-center justify-between p-3 bg-dark-bg hover:bg-dark-hover border border-dark-border rounded-lg transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">☕</span>
                   <div className="text-left">
                     <div className="font-bold text-white group-hover:text-gold-primary">Short Rest</div>
-                    <div className="text-xs text-gray-500">Reset short-rest abilities</div>
+                    <div className="text-xs text-gray-500">Dés de vie & Channel Divinity</div>
                   </div>
                 </div>
               </button>
 
               <button 
-                onClick={() => {
-                  if(window.confirm('Take a Long Rest? This will reset all abilities and HP.')) {
-                    longRest();
-                  }
-                }}
+                onClick={() => setShowLongRestDialog(true)}
                 className="w-full flex items-center justify-between p-3 bg-dark-bg hover:bg-dark-hover border border-dark-border rounded-lg transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">⛺</span>
+                  <span className="text-xl">🌙</span>
                   <div className="text-left">
-                    <div className="font-bold text-white group-hover:text-gold-primary">Long Rest</div>
-                    <div className="text-xs text-gray-500">Full recovery</div>
+                    <div className="font-bold text-white group-hover:text-purple-400">Long Rest</div>
+                    <div className="text-xs text-gray-500">Récupération totale</div>
                   </div>
                 </div>
               </button>
@@ -178,6 +175,18 @@ export default function DashboardHome() {
           </div>
         </div>
       </div>
+
+      {/* Short Rest Dialog */}
+      <ShortRestDialog 
+        isOpen={showShortRestDialog} 
+        onClose={() => setShowShortRestDialog(false)} 
+      />
+
+      {/* Long Rest Dialog */}
+      <LongRestDialog 
+        isOpen={showLongRestDialog} 
+        onClose={() => setShowLongRestDialog(false)} 
+      />
     </div>
   );
 }

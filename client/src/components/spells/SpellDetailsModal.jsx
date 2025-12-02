@@ -1,37 +1,86 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useCharacterStore } from '../../store/characterStore';
+import ConcentrationWarningDialog from './ConcentrationWarningDialog';
+import { toast } from '../../hooks/useToast';
 
 export default function SpellDetailsModal({ spell, onClose, onCast }) {
-  if (!spell) return null;
+  const { character, fetchCharacter } = useCharacterStore();
+  const [showConcentrationWarning, setShowConcentrationWarning] = useState(false);
+  const [casting, setCasting] = useState(false);
 
-  // Close modal on Escape key
+  const isConcentration = spell?.duration?.toLowerCase().includes('concentration');
+  const currentConcentration = character?.concentration_spell;
+
+  // Close modal on Escape key - MUST be before any conditional return
   useEffect(() => {
+    if (!spell) return;
+    
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !showConcentrationWarning) {
         onClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [spell, onClose, showConcentrationWarning]);
+
+  // Early return AFTER all hooks
+  if (!spell) return null;
 
   const getDurationText = (duration) => {
-    if (duration && duration.includes('Concentration')) {
+    if (duration && duration.toLowerCase().includes('concentration')) {
       return (
         <span className="flex items-center gap-2">
           <span className="text-purple-400">🧠</span>
-          {duration}
+          <span className="text-purple-300">{duration}</span>
         </span>
       );
     }
     return duration;
   };
 
-  const handleCast = () => {
-    if (onCast) {
-      onCast(spell);
+  const handleCastClick = () => {
+    // Check if this is a concentration spell and we're already concentrating
+    if (isConcentration && currentConcentration) {
+      setShowConcentrationWarning(true);
+    } else {
+      executeCast();
     }
-    onClose();
+  };
+
+  const executeCast = async () => {
+    setCasting(true);
+    try {
+      if (onCast) {
+        await onCast({
+          ...spell,
+          concentration: isConcentration
+        });
+      }
+      
+      if (isConcentration) {
+        toast.info(`🧠 Concentration: ${spell.name}`);
+      }
+      
+      await fetchCharacter();
+      onClose();
+    } catch (error) {
+      console.error('Cast failed:', error);
+      toast.error('Failed to cast spell');
+    } finally {
+      setCasting(false);
+    }
+  };
+
+  const handleConcentrationConfirm = async () => {
+    setShowConcentrationWarning(false);
+    toast.warning(`💔 Concentration sur ${currentConcentration} brisée!`);
+    await executeCast();
+  };
+
+  const handleConcentrationCancel = () => {
+    setShowConcentrationWarning(false);
   };
 
   return (
@@ -136,13 +185,44 @@ export default function SpellDetailsModal({ spell, onClose, onCast }) {
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-dark-medium border-t-2 border-gold-primary p-6">
+          {/* Concentration Warning Banner */}
+          {isConcentration && currentConcentration && (
+            <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-yellow-200 text-sm font-semibold">Attention: Sort de Concentration</p>
+                <p className="text-yellow-100/70 text-xs">
+                  Tu te concentres sur <strong>{currentConcentration}</strong>. Lancer ce sort brisera ta concentration.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Concentration Info for new concentration spells */}
+          {isConcentration && !currentConcentration && (
+            <div className="mb-4 p-3 bg-purple-900/30 border border-purple-500/50 rounded-lg flex items-center gap-3">
+              <span className="text-2xl">🧠</span>
+              <div className="flex-1">
+                <p className="text-purple-200 text-sm font-semibold">Sort de Concentration</p>
+                <p className="text-purple-100/70 text-xs">
+                  Ce sort nécessite de maintenir ta concentration. Subir des dégâts peut la briser.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="flex gap-3">
             {spell.level > 0 && (
               <button
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-lg rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                onClick={handleCast}
+                className={`flex-1 px-6 py-3 text-white font-bold text-lg rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                  isConcentration 
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500' 
+                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500'
+                }`}
+                onClick={handleCastClick}
+                disabled={casting}
               >
-                ✨ Cast Spell
+                {casting ? '✨ Casting...' : isConcentration ? '🧠 Cast (Concentration)' : '✨ Cast Spell'}
               </button>
             )}
             <button
@@ -154,6 +234,16 @@ export default function SpellDetailsModal({ spell, onClose, onCast }) {
           </div>
         </div>
       </div>
+
+      {/* Concentration Warning Dialog */}
+      <ConcentrationWarningDialog
+        isOpen={showConcentrationWarning}
+        currentSpell={currentConcentration}
+        newSpell={spell.name}
+        onConfirm={handleConcentrationConfirm}
+        onCancel={handleConcentrationCancel}
+        onClose={handleConcentrationCancel}
+      />
     </div>
   );
 }
