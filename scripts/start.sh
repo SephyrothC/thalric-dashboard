@@ -40,13 +40,33 @@ echo ""
 # Start server
 echo -e "${GREEN}🚀 Starting server...${NC}"
 echo ""
+
+# Get local IP address (Windows host IP, not WSL)
+# Try to get Windows host IP via /etc/resolv.conf (WSL2) or powershell
+if grep -q microsoft /proc/version 2>/dev/null; then
+    # We're in WSL - get Windows host IP
+    LOCAL_IP=$(powershell.exe -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.InterfaceAlias -notmatch 'Loopback|vEthernet|WSL' -and \$_.PrefixOrigin -eq 'Dhcp' } | Select-Object -First 1).IPAddress" 2>/dev/null | tr -d '\r')
+    
+    # Fallback: try getting from ipconfig
+    if [ -z "$LOCAL_IP" ]; then
+        LOCAL_IP=$(powershell.exe -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.InterfaceAlias -match 'Wi-Fi|Ethernet' } | Select-Object -First 1).IPAddress" 2>/dev/null | tr -d '\r')
+    fi
+else
+    # Not in WSL - use standard Linux method
+    LOCAL_IP=$(hostname -I | awk '{print $1}')
+fi
+
+# Final fallback
+if [ -z "$LOCAL_IP" ]; then
+    LOCAL_IP="<your-windows-ip>"
+fi
+
 echo "Dashboard will be available at:"
 echo "  🖥️  Main Dashboard: http://localhost:3000"
 echo "  📱 Tablet Viewer:   http://localhost:3000/viewer"
 echo ""
 echo "To access from tablet on same network:"
-echo "  Find your local IP with: ipconfig (Windows) or ifconfig (Mac/Linux)"
-echo "  Then access: http://YOUR_LOCAL_IP:3000/viewer"
+echo -e "  📱 ${GREEN}http://${LOCAL_IP}:3000/viewer${NC}"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
