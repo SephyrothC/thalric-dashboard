@@ -21,6 +21,11 @@ function parseDiceFormula(formula) {
   return { count, sides, modifier };
 }
 
+function getMaxDamage(formula) {
+  const { count, sides, modifier } = parseDiceFormula(formula);
+  return (count * sides) + modifier;
+}
+
 function executeDiceRoll(formula) {
   const { count, sides, modifier } = parseDiceFormula(formula);
   const rolls = [];
@@ -125,17 +130,55 @@ module.exports = (io) => {
         return res.status(400).json({ error: 'Weapon not found' });
       }
 
+      // Fetch active conditions
+      const activeConditions = db.prepare(`
+        SELECT name FROM conditions 
+        WHERE character_id = 1 AND active = 1
+      `).all().map(c => c.name);
+
+      // Calculate attack bonus
+      let attackBonus = weapon.attack_bonus;
+      let bonusDetails = [];
+
+      // Apply Sacred Weapon
+      if (activeConditions.includes('Sacred Weapon')) {
+        attackBonus += 5;
+        bonusDetails.push('Sacred Weapon (+5)');
+      }
+
+      // Apply Bless
+      if (activeConditions.includes('Bless')) {
+        const blessRoll = executeDiceRoll('1d4');
+        attackBonus += blessRoll.total;
+        bonusDetails.push(`Bless (+${blessRoll.total})`);
+      }
+
+      // Apply Bane
+      if (activeConditions.includes('Bane')) {
+        const baneRoll = executeDiceRoll('1d4');
+        attackBonus -= baneRoll.total;
+        bonusDetails.push(`Bane (-${baneRoll.total})`);
+      }
+
+      // Manual modifiers
+      if (modifiers?.sacredWeapon && !activeConditions.includes('Sacred Weapon')) {
+        attackBonus += 5;
+        bonusDetails.push('Sacred Weapon (+5)');
+      }
+
       // Roll attack
-      const attackBonus = weapon.attack_bonus + (modifiers?.sacredWeapon ? 5 : 0);
       const attackFormula = `1d20+${attackBonus}`;
       const attackRoll = executeDiceRoll(attackFormula);
+
+      // Format details
+      const rollDetails = `Roll: ${attackRoll.rolls[0]} + ${weapon.attack_bonus} (Base)${bonusDetails.length > 0 ? ' + ' + bonusDetails.join(' + ') : ''}`;
 
       // Broadcast attack roll
       const attackData = {
         result: attackRoll.total,
         formula: attackFormula,
         rollType: `Attack - ${weapon.name}`,
-        details: `Roll: ${attackRoll.rolls[0]} + ${attackBonus}`,
+        details: rollDetails,
         is_critical: attackRoll.isCritical,
         is_fumble: attackRoll.isFumble,
         timestamp: new Date().toLocaleTimeString(),
@@ -189,6 +232,12 @@ module.exports = (io) => {
         return res.status(404).json({ error: 'Character not found' });
       }
 
+      // Fetch active conditions
+      const activeConditions = db.prepare(`
+        SELECT name FROM conditions 
+        WHERE character_id = 1 AND active = 1
+      `).all().map(c => c.name);
+
       const data = JSON.parse(character.data);
       const weapon = data.weapons[weaponId];
 
@@ -207,9 +256,9 @@ module.exports = (io) => {
 
       // Critical: double dice
       if (isCritical) {
-        const critRoll = executeDiceRoll(damageFormula.replace(/\+\d+/, '')); // Remove modifier for crit
-        totalDamage += critRoll.total;
-        damageDetails.push(`Critical: +${critRoll.total}`);
+        const maxDmg = getMaxDamage(damageFormula);
+        totalDamage += maxDmg;
+        damageDetails.push(`Critical (Max): +${maxDmg}`);
       }
 
       // Magic damage (Crystal Longsword)
@@ -219,9 +268,9 @@ module.exports = (io) => {
         damageDetails.push(`${weapon.magic_damage_type}: ${magicRoll.total}`);
 
         if (isCritical) {
-          const critMagicRoll = executeDiceRoll(weapon.magic_damage);
-          totalDamage += critMagicRoll.total;
-          damageDetails.push(`Critical ${weapon.magic_damage_type}: +${critMagicRoll.total}`);
+          const maxMagic = getMaxDamage(weapon.magic_damage);
+          totalDamage += maxMagic;
+          damageDetails.push(`Critical ${weapon.magic_damage_type} (Max): +${maxMagic}`);
         }
       }
 
@@ -230,16 +279,34 @@ module.exports = (io) => {
         const improvedSmiteRoll = executeDiceRoll('1d8');
         totalDamage += improvedSmiteRoll.total;
         damageDetails.push(`Improved Divine Smite: ${improvedSmiteRoll.total}`);
+
+        if (isCritical) {
+          const maxImp = getMaxDamage('1d8');
+          totalDamage += maxImp;
+          damageDetails.push(`Crit Imp. Smite (Max): +${maxImp}`);
+        }
       }
 
       // Divine Smite (if using spell slot)
       if (modifiers?.divineSmiteLevel) {
         const level = modifiers.divineSmiteLevel;
-        const smiteDice = Math.min(2 + level, 5); // 2d8 base + 1d8 per level, max 5d8
+        let smiteDice = Math.min(2 + level, 5); // 2d8 base + 1d8 per level, max 5d8
+        
+        // Undead/Fiend bonus (+1d8, max 6d8)
+        if (modifiers.isUndeadFiend) {
+          smiteDice = Math.min(smiteDice + 1, 6);
+        }
+
         const smiteFormula = `${smiteDice}d8`;
         const smiteRoll = executeDiceRoll(smiteFormula);
         totalDamage += smiteRoll.total;
-        damageDetails.push(`Divine Smite (Lv${level}): ${smiteRoll.total}`);
+        damageDetails.push(`Divine Smite (Lv${level}${modifiers.isUndeadFiend ? '+Fiend' : ''}): ${smiteRoll.total}`);
+
+        if (isCritical) {
+          const maxSmite = getMaxDamage(smiteFormula);
+          totalDamage += maxSmite;
+          damageDetails.push(`Crit Smite (Max): +${maxSmite}`);
+        }
 
         // Consume spell slot
         data.spellcasting.spell_slots_current[level] -= 1;
@@ -253,7 +320,7 @@ module.exports = (io) => {
       }
 
       // Radiant Soul (+level radiant damage once per turn)
-      if (modifiers?.radiantSoul) {
+      if (modifiers?.radiantSoul || activeConditions.includes('Radiant Soul')) {
         totalDamage += data.character_info.level;
         damageDetails.push(`Radiant Soul: ${data.character_info.level}`);
       }

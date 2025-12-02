@@ -36,11 +36,33 @@ router.get('/', (req, res) => {
       return res.status(404).json({ error: 'Character not found' });
     }
 
+    // Fetch active conditions
+    const activeConditions = db.prepare(`
+      SELECT name FROM conditions 
+      WHERE character_id = 1 AND active = 1
+    `).all().map(c => c.name);
+
     // Parse JSON data
     const characterData = {
       ...character,
       data: JSON.parse(character.data)
     };
+
+    // Apply Condition Effects to Stats
+    characterData.data.active_conditions = activeConditions;
+    
+    // AC Bonuses
+    if (activeConditions.includes('Shield of Faith')) {
+      characterData.data.stats.ac += 2;
+      if (!characterData.data.stats.ac_bonuses) characterData.data.stats.ac_bonuses = [];
+      characterData.data.stats.ac_bonuses.push('Shield of Faith (+2)');
+    }
+    
+    if (activeConditions.includes('Haste')) {
+      characterData.data.stats.ac += 2;
+      if (!characterData.data.stats.ac_bonuses) characterData.data.stats.ac_bonuses = [];
+      characterData.data.stats.ac_bonuses.push('Haste (+2)');
+    }
 
     res.json(characterData);
   } catch (error) {
@@ -349,6 +371,31 @@ router.post('/feature/use', (req, res) => {
   } catch (error) {
     console.error('Error using feature:', error);
     res.status(500).json({ error: 'Failed to use feature' });
+  }
+});
+
+// Delete a condition
+router.delete('/conditions/:name', (req, res) => {
+  try {
+    const { name } = req.params;
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      UPDATE conditions 
+      SET active = 0 
+      WHERE character_id = 1 AND name = ? AND active = 1
+    `);
+
+    const result = stmt.run(name);
+
+    if (result.changes > 0) {
+      res.json({ success: true, message: `Condition ${name} removed` });
+    } else {
+      res.status(404).json({ error: 'Condition not found or already inactive' });
+    }
+  } catch (error) {
+    console.error('Error removing condition:', error);
+    res.status(500).json({ error: 'Failed to remove condition' });
   }
 });
 

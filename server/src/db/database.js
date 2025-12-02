@@ -63,10 +63,30 @@ function initDatabase() {
     )
   `);
 
+  // Conditions table (for active effects like Bless, Shield of Faith)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS conditions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      character_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      duration_type TEXT DEFAULT 'rounds',
+      duration_value INTEGER DEFAULT 10,
+      rounds_left INTEGER,
+      active BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (character_id) REFERENCES character(id) ON DELETE CASCADE
+    )
+  `);
+
   // Create index for faster queries
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_dice_rolls_character
     ON dice_rolls(character_id, timestamp DESC)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_conditions_active
+    ON conditions(character_id, active)
   `);
 
   console.log('✅ Database initialized successfully');

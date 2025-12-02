@@ -2,10 +2,12 @@ import { useState, useMemo } from 'react';
 import { useCharacterStore } from '../store/characterStore';
 import FeaturesList from '../components/features/FeaturesList';
 import LayOnHandsDialog from '../components/combat/LayOnHandsDialog';
+import ChannelDivinityDialog from '../components/combat/ChannelDivinityDialog';
 
 export default function Features() {
   const { character, useFeature, shortRest, longRest } = useCharacterStore();
   const [isLayOnHandsOpen, setLayOnHandsOpen] = useState(false);
+  const [isChannelDivinityOpen, setChannelDivinityOpen] = useState(false);
 
   // --- Data Normalization ---
   const features = useMemo(() => {
@@ -56,6 +58,8 @@ export default function Features() {
   const handleUseFeature = async (feature) => {
     if (feature.id === 'lay_on_hands') {
       setLayOnHandsOpen(true);
+    } else if (feature.id === 'channel_divinity') {
+      setChannelDivinityOpen(true);
     } else {
       // Standard usage
       // Pass duration if available
@@ -101,6 +105,10 @@ export default function Features() {
       <LayOnHandsDialog 
         isOpen={isLayOnHandsOpen} 
         onClose={() => setLayOnHandsOpen(false)} 
+      />
+      <ChannelDivinityDialog 
+        isOpen={isChannelDivinityOpen} 
+        onClose={() => setChannelDivinityOpen(false)} 
       />
     </div>
   );

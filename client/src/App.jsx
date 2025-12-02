@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useCharacterStore } from './store/characterStore';
+import { useSocket } from './hooks/useSocket';
 import { useToast, setGlobalToastHandler } from './hooks/useToast';
 import { ToastContainer } from './components/ui/Toast';
 
@@ -15,12 +16,45 @@ import Viewer from './pages/Viewer';
 
 function App() {
   const { character, fetchCharacter, error } = useCharacterStore();
+  const { socket } = useSocket();
   const toast = useToast();
 
   // Set global toast handler for easy access
   useEffect(() => {
     setGlobalToastHandler(toast);
   }, [toast]);
+
+  // Listen for real-time updates to refresh character data
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = () => {
+      fetchCharacter();
+    };
+
+    // Combat & Condition events that affect character stats/state
+    socket.on('condition_added', handleUpdate);
+    socket.on('condition_removed', handleUpdate);
+    socket.on('turn_advanced', handleUpdate);
+    socket.on('combat_started', handleUpdate);
+    socket.on('combat_ended', handleUpdate);
+    socket.on('round_advanced', handleUpdate);
+    socket.on('concentration_started', handleUpdate);
+    socket.on('concentration_ended', handleUpdate);
+    socket.on('death_save_rolled', handleUpdate);
+
+    return () => {
+      socket.off('condition_added', handleUpdate);
+      socket.off('condition_removed', handleUpdate);
+      socket.off('turn_advanced', handleUpdate);
+      socket.off('combat_started', handleUpdate);
+      socket.off('combat_ended', handleUpdate);
+      socket.off('round_advanced', handleUpdate);
+      socket.off('concentration_started', handleUpdate);
+      socket.off('concentration_ended', handleUpdate);
+      socket.off('death_save_rolled', handleUpdate);
+    };
+  }, [socket, fetchCharacter]);
 
   useEffect(() => {
     fetchCharacter();

@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useCharacterStore } from '../../store/characterStore';
 import { useDice } from '../../hooks/useDice';
+import ChannelDivinityDialog from './ChannelDivinityDialog';
+import DivineSmiteDialog from './DivineSmiteDialog';
 
 export default function CombatActions() {
   const [activeTab, setActiveTab] = useState('attacks'); // attacks | spells | features
+  const [isChannelDivinityOpen, setChannelDivinityOpen] = useState(false);
+  const [smiteWeaponId, setSmiteWeaponId] = useState(null);
   const { character, useFeature, castSpell } = useCharacterStore();
   const { rollAttack, rollDamage, rolling } = useDice();
   
@@ -93,6 +97,14 @@ export default function CombatActions() {
                   >
                     {weapon.damage} Dmg
                   </button>
+                  <button 
+                    onClick={() => setSmiteWeaponId(id)}
+                    disabled={rolling}
+                    className="px-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black text-sm font-bold rounded shadow-lg active:scale-95 transition-all"
+                    title="Divine Smite"
+                  >
+                    ✨
+                  </button>
                 </div>
               </div>
             ))}
@@ -162,7 +174,13 @@ export default function CombatActions() {
                 </div>
                 <p className="text-xs text-gray-400 mt-1 line-clamp-2">{feature.description}</p>
                 <button 
-                  onClick={() => useFeature(id, { name: feature.name, duration: feature.duration })}
+                  onClick={() => {
+                    if (id === 'channel_divinity') {
+                      setChannelDivinityOpen(true);
+                    } else {
+                      useFeature(id, { name: feature.name, duration: feature.duration });
+                    }
+                  }}
                   className="w-full mt-2 bg-dark-surface hover:bg-gold-primary/20 text-gold-primary border border-gold-primary/30 text-xs font-bold py-1.5 rounded transition-all active:scale-95"
                 >
                   Use Feature
@@ -172,6 +190,17 @@ export default function CombatActions() {
           </div>
         )}
       </div>
+
+      <ChannelDivinityDialog 
+        isOpen={isChannelDivinityOpen} 
+        onClose={() => setChannelDivinityOpen(false)} 
+      />
+
+      <DivineSmiteDialog 
+        isOpen={!!smiteWeaponId} 
+        onClose={() => setSmiteWeaponId(null)} 
+        weaponId={smiteWeaponId}
+      />
     </div>
   );
 }

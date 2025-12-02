@@ -20,8 +20,31 @@ export default function CombatVitals() {
   };
 
   const handleSaveRoll = (stat, mod) => {
-    const formula = `1d20${mod >= 0 ? '+' : ''}${mod}`;
-    rollDice(formula, 'Saving Throw', `${stat.charAt(0).toUpperCase() + stat.slice(1)} Save`);
+    let formula = `1d20${mod >= 0 ? '+' : ''}${mod}`;
+    let details = `${stat.charAt(0).toUpperCase() + stat.slice(1)} Save`;
+
+    // Check for Bless/Bane
+    const activeConditions = character?.data?.active_conditions || [];
+    
+    if (activeConditions.includes('Bless')) {
+      formula += '+1d4';
+      details += ' + Bless';
+    }
+    
+    if (activeConditions.includes('Bane')) {
+      formula += '-1d4';
+      details += ' - Bane';
+    }
+
+    if (activeConditions.includes('Aura of Protection')) {
+       // Assuming Aura of Protection is always active for the Paladin themselves if the feature is present
+       // But here we are checking active_conditions which usually implies temporary effects.
+       // However, Aura of Protection is a passive feature that adds CHA mod to saves.
+       // The user might want this automated too.
+       // Let's stick to the requested "Active Conditions" for now.
+    }
+
+    rollDice(formula, 'Saving Throw', details);
   };
 
   const handleInitiativeRoll = () => {
@@ -54,7 +77,11 @@ export default function CombatVitals() {
         <div className="bg-dark-surface p-2 rounded-lg border border-dark-border text-center">
           <div className="text-gray-400 text-[10px] uppercase tracking-wider">AC</div>
           <div className="text-2xl font-bold text-white font-display">{stats.ac}</div>
-          <div className="text-[10px] text-gold-dim">Shield +2</div>
+          {stats.ac_bonuses && stats.ac_bonuses.length > 0 && (
+            <div className="text-[9px] text-gold-dim truncate">
+              {stats.ac_bonuses.join(', ')}
+            </div>
+          )}
         </div>
         <div className="bg-dark-surface p-2 rounded-lg border border-dark-border text-center">
           <div className="text-gray-400 text-[10px] uppercase tracking-wider">Speed</div>

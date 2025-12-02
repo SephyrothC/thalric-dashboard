@@ -40,9 +40,25 @@ CREATE TABLE IF NOT EXISTS dice_rolls (
   FOREIGN KEY (character_id) REFERENCES character(id) ON DELETE CASCADE
 );
 
+-- Conditions table - Tracks active effects
+CREATE TABLE IF NOT EXISTS conditions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  duration_type TEXT DEFAULT 'rounds',
+  duration_value INTEGER DEFAULT 10,
+  rounds_left INTEGER,
+  active BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (character_id) REFERENCES character(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_dice_rolls_character
   ON dice_rolls(character_id, timestamp DESC);
+
+CREATE INDEX IF NOT EXISTS idx_conditions_active
+  ON conditions(character_id, active);
 
 CREATE INDEX IF NOT EXISTS idx_spell_slots_character
   ON spell_slots(character_id);
