@@ -2,6 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { getDb } = require('../db/database');
 
+function parseDuration(durationStr) {
+  if (!durationStr) return null;
+  const lower = durationStr.toLowerCase();
+  if (lower.includes('instant')) return null;
+  
+  let rounds = 0;
+  if (lower.includes('minute')) {
+    const num = parseInt(lower) || 1;
+    rounds = num * 10;
+  } else if (lower.includes('hour')) {
+    const num = parseInt(lower) || 1;
+    rounds = num * 600;
+  } else if (lower.includes('round')) {
+    const num = parseInt(lower) || 1;
+    rounds = num;
+  } else if (lower.includes('turn')) {
+    rounds = 1;
+  }
+  
+  return rounds > 0 ? rounds : null;
+}
+
+module.exports = (io) => {
+
 // Get all spells
 router.get('/', (req, res) => {
   try {
@@ -27,7 +51,7 @@ router.get('/', (req, res) => {
 // Cast spell (consume spell slot)
 router.post('/cast', (req, res) => {
   try {
-    const { spellLevel } = req.body;
+    const { spellLevel, name, duration } = req.body;
 
     if (!spellLevel || spellLevel < 1 || spellLevel > 9) {
       return res.status(400).json({ error: 'Invalid spell level' });
@@ -59,6 +83,35 @@ router.post('/cast', (req, res) => {
     `);
 
     stmt.run(JSON.stringify(data));
+
+    // Add condition if duration is present
+    if (duration && name) {
+      const rounds = parseDuration(duration);
+      if (rounds) {
+        // Check if already exists
+        const existing = db.prepare(`
+          SELECT * FROM conditions
+          WHERE character_id = 1 AND name = ? AND active = 1
+        `).get(name);
+
+        if (existing) {
+          // Reset duration
+          db.prepare(`
+            UPDATE conditions 
+            SET rounds_left = ?, duration_value = ? 
+            WHERE id = ?
+          `).run(rounds, rounds, existing.id);
+        } else {
+          // Insert new
+          db.prepare(`
+            INSERT INTO conditions (character_id, name, duration_type, duration_value, rounds_left)
+            VALUES (1, ?, 'rounds', ?, ?)
+          `).run(name, rounds, rounds);
+        }
+        
+        io.emit('condition_added', { name, duration_type: 'rounds', duration_value: rounds });
+      }
+    }
 
     res.json({
       success: true,
@@ -119,4 +172,6 @@ router.post('/restore', (req, res) => {
   }
 });
 
-module.exports = router;
+return router;
+};
+

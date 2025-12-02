@@ -409,6 +409,9 @@ module.exports = (io) => {
         WHERE character_id = 1 AND duration_type = 'rounds' AND rounds_left <= 0
       `).run();
 
+      // Emit update
+      io.emit('turn_advanced');
+
       res.json({ success: true });
     } catch (error) {
       console.error('Failed to advance turn:', error);
@@ -429,10 +432,35 @@ module.exports = (io) => {
       `);
       updateStmt.run();
 
-      res.json({ success: true });
+      const char = db.prepare('SELECT current_round FROM character WHERE id = 1').get();
+      io.emit('round_advanced', { round: char.current_round });
+
+      res.json({ success: true, round: char.current_round });
     } catch (error) {
       console.error('Failed to advance round:', error);
       res.status(500).json({ error: 'Failed to advance round' });
+    }
+  });
+
+  // POST /api/combat/reset-round
+  router.post('/reset-round', async (req, res) => {
+    const db = getDb();
+
+    try {
+      const updateStmt = db.prepare(`
+        UPDATE character
+        SET current_round = 1,
+            reaction_used = 0
+        WHERE id = 1
+      `);
+      updateStmt.run();
+
+      io.emit('round_advanced', { round: 1 });
+
+      res.json({ success: true, round: 1 });
+    } catch (error) {
+      console.error('Failed to reset round:', error);
+      res.status(500).json({ error: 'Failed to reset round' });
     }
   });
 

@@ -130,12 +130,16 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   // Cast spell (consume spell slot)
-  castSpell: async (spellLevel) => {
+  castSpell: async (spellOrLevel) => {
     try {
+      const body = typeof spellOrLevel === 'object' 
+        ? { spellLevel: spellOrLevel.level, name: spellOrLevel.name, duration: spellOrLevel.duration }
+        : { spellLevel: spellOrLevel };
+
       const response = await fetch(`${API_URL}/api/spells/cast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spellLevel })
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) throw new Error('Failed to cast spell');

@@ -16,6 +16,7 @@ export default function DashboardLayout({ children }) {
     { path: '/', label: 'Overview', icon: '📊' },
     { path: '/combat', label: 'Combat Tracker', icon: '⚔️' },
     { path: '/spells', label: 'Spellbook', icon: '✨' },
+    { path: '/features', label: 'Abilities', icon: '⚡' },
     { path: '/inventory', label: 'Inventory', icon: '🎒' },
   ];
 
@@ -129,7 +130,7 @@ export default function DashboardLayout({ children }) {
               </div>
               
               {/* HP Widget */}
-              <div className="w-48">
+              <div className="w-40">
                 <HPDisplay
                   current={stats.hp_current || 0}
                   max={stats.hp_max || 100}

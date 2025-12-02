@@ -131,7 +131,7 @@ export default function CombatActions() {
                         </div>
                         {level !== '0' && (
                           <button 
-                            onClick={() => castSpell(parseInt(level))}
+                            onClick={() => castSpell(spell)}
                             disabled={spellSlots[level]?.current <= 0}
                             className="px-3 py-1 bg-dark-surface hover:bg-combat-magic hover:text-white text-combat-magic border border-combat-magic/30 rounded text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           >
@@ -162,7 +162,7 @@ export default function CombatActions() {
                 </div>
                 <p className="text-xs text-gray-400 mt-1 line-clamp-2">{feature.description}</p>
                 <button 
-                  onClick={() => useFeature(id)}
+                  onClick={() => useFeature(id, { name: feature.name, duration: feature.duration })}
                   className="w-full mt-2 bg-dark-surface hover:bg-gold-primary/20 text-gold-primary border border-gold-primary/30 text-xs font-bold py-1.5 rounded transition-all active:scale-95"
                 >
                   Use Feature

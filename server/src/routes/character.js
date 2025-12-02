@@ -2,6 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { getDb } = require('../db/database');
 
+function parseDuration(durationStr) {
+  if (!durationStr) return null;
+  const lower = durationStr.toLowerCase();
+  if (lower.includes('instant')) return null;
+  
+  let rounds = 0;
+  if (lower.includes('minute')) {
+    const num = parseInt(lower) || 1;
+    rounds = num * 10;
+  } else if (lower.includes('hour')) {
+    const num = parseInt(lower) || 1;
+    rounds = num * 600;
+  } else if (lower.includes('round')) {
+    const num = parseInt(lower) || 1;
+    rounds = num;
+  } else if (lower.includes('turn')) {
+    rounds = 1;
+  }
+  
+  return rounds > 0 ? rounds : null;
+}
+
+module.exports = (io) => {
+
 // Get current character
 router.get('/', (req, res) => {
   try {
@@ -225,7 +249,7 @@ router.post('/rest/long', (req, res) => {
 // Use feature (Channel Divinity, Lay on Hands, etc.)
 router.post('/feature/use', (req, res) => {
   try {
-    const { feature, amount, action } = req.body;
+    const { feature, amount, action, name, duration } = req.body;
 
     if (!feature) {
       return res.status(400).json({ error: 'Missing feature name' });
@@ -290,6 +314,37 @@ router.post('/feature/use', (req, res) => {
 
     stmt.run(JSON.stringify(data));
 
+    // Add condition if duration is present
+    if (duration) {
+      const rounds = parseDuration(duration);
+      if (rounds) {
+        const conditionName = name || feature;
+        
+        // Check if already exists
+        const existing = db.prepare(`
+          SELECT * FROM conditions
+          WHERE character_id = 1 AND name = ? AND active = 1
+        `).get(conditionName);
+
+        if (existing) {
+          // Reset duration
+          db.prepare(`
+            UPDATE conditions 
+            SET rounds_left = ?, duration_value = ? 
+            WHERE id = ?
+          `).run(rounds, rounds, existing.id);
+        } else {
+          // Insert new
+          db.prepare(`
+            INSERT INTO conditions (character_id, name, duration_type, duration_value, rounds_left)
+            VALUES (1, ?, 'rounds', ?, ?)
+          `).run(conditionName, rounds, rounds);
+        }
+        
+        io.emit('condition_added', { name: conditionName, duration_type: 'rounds', duration_value: rounds });
+      }
+    }
+
     res.json(responseData);
   } catch (error) {
     console.error('Error using feature:', error);
@@ -334,4 +389,6 @@ router.post('/notes', (req, res) => {
   }
 });
 
-module.exports = router;
+return router;
+};
+

@@ -44,9 +44,9 @@ app.use('/api', limiter);
 initDatabase();
 
 // Routes
-app.use('/api/character', characterRoutes);
+app.use('/api/character', characterRoutes(io));
 app.use('/api/dice', diceRoutes(io)); // Pass io to dice routes for broadcasting
-app.use('/api/spells', spellsRoutes);
+app.use('/api/spells', spellsRoutes(io));
 app.use('/api/combat', combatRoutes(io)); // Pass io for real-time combat updates
 
 // Health check

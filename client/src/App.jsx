@@ -9,6 +9,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import Combat from './pages/Combat';
 import Spells from './pages/Spells';
+import Features from './pages/Features';
 import Inventory from './pages/Inventory';
 import Viewer from './pages/Viewer';
 
@@ -60,6 +61,7 @@ function App() {
         <Route path="/" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
         <Route path="/combat" element={<DashboardLayout><Combat /></DashboardLayout>} />
         <Route path="/spells" element={<DashboardLayout><Spells /></DashboardLayout>} />
+        <Route path="/features" element={<DashboardLayout><Features /></DashboardLayout>} />
         <Route path="/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
         
         {/* Standalone Routes */}

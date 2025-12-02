@@ -304,7 +304,7 @@ export default function Spells() {
         onClose={() => setSelectedSpell(null)}
         onCast={async (spell) => {
           if (spell.level > 0) {
-            await castSpell(spell.level);
+            await castSpell(spell);
           }
         }}
       />

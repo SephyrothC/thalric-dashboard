@@ -18,8 +18,9 @@
 
 /* Size Variants */
 .hp-display-compact {
-  padding: var(--space-2);
-  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  gap: var(--space-1);
+  border-width: 1px;
 }
 
 .hp-display-large {
@@ -81,15 +82,15 @@
 
 /* Compact Size Numbers */
 .hp-display-compact .hp-current {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
 }
 
 .hp-display-compact .hp-max {
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
 }
 
 .hp-display-compact .hp-separator {
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
 }
 
 /* Large Size Numbers */
@@ -113,7 +114,13 @@
 }
 
 .hp-display-compact .hp-bar-container {
-  height: 24px;
+  height: 12px;
+  border-radius: var(--radius-md);
+}
+
+.hp-display-compact .hp-bar-label {
+  font-size: 10px;
+  line-height: 12px;
 }
 
 .hp-display-large .hp-bar-container {
