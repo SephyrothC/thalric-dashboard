@@ -17,11 +17,22 @@ export default function CombatLog() {
       });
     };
 
+    const handleSpellCast = (data) => {
+      addLog({
+        type: 'spell',
+        timestamp: new Date(),
+        data: data
+      });
+    };
+
     // Listen for dice rolls
     socket.on('dice_roll', handleDiceRoll);
+    // Listen for spell casts
+    socket.on('spell_cast', handleSpellCast);
 
     return () => {
       socket.off('dice_roll', handleDiceRoll);
+      socket.off('spell_cast', handleSpellCast);
     };
   }, [socket]);
 
@@ -59,7 +70,12 @@ export default function CombatLog() {
 }
 
 function LogEntry({ log }) {
-  const { data } = log;
+  const { data, type } = log;
+  
+  // Handle spell cast logs
+  if (type === 'spell') {
+    return <SpellLogEntry log={log} />;
+  }
   
   // Normalize data from different backend endpoints
   const total = data.total ?? data.result;
@@ -144,6 +160,99 @@ function LogEntry({ log }) {
           Critical Miss!
         </div>
       )}
+    </div>
+  );
+}
+
+function SpellLogEntry({ log }) {
+  const { data } = log;
+  const { spell, level, baseLevel, effect, rollResult } = data;
+  
+  const isUpcast = level > baseLevel;
+  const hasRoll = rollResult && rollResult.total !== undefined;
+  
+  // Determine the type of spell for coloring
+  const isHealing = rollResult?.type === 'healing' || effect?.toLowerCase().includes('soign') || effect?.toLowerCase().includes('pv');
+  const isDamage = rollResult?.type === 'spell_damage' || effect?.toLowerCase().includes('dégât');
+  
+  let borderColor = 'border-purple-500/50';
+  let bgGradient = 'from-purple-900/30 to-blue-900/30';
+  let iconBg = 'bg-purple-500/20';
+  let iconColor = 'text-purple-400';
+  
+  if (isHealing) {
+    borderColor = 'border-green-500/50';
+    bgGradient = 'from-green-900/30 to-teal-900/30';
+    iconBg = 'bg-green-500/20';
+    iconColor = 'text-green-400';
+  } else if (isDamage) {
+    borderColor = 'border-red-500/50';
+    bgGradient = 'from-red-900/30 to-orange-900/30';
+    iconBg = 'bg-red-500/20';
+    iconColor = 'text-red-400';
+  }
+  
+  return (
+    <div className={`bg-gradient-to-r ${bgGradient} p-3 rounded-lg border ${borderColor} shadow-sm animate-slide-in`}>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-6 h-6 rounded-full ${iconBg} flex items-center justify-center`}>
+            <span className={iconColor}>✨</span>
+          </span>
+          <span className="font-bold text-white text-sm">
+            {spell}
+          </span>
+          <span className="text-xs px-2 py-0.5 bg-dark-bg rounded text-gray-400">
+            Niv. {level}
+          </span>
+          {isUpcast && (
+            <span className="text-xs px-2 py-0.5 bg-purple-500/30 rounded text-purple-300">
+              +{level - baseLevel}
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-gray-500">
+          {log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </span>
+      </div>
+
+      {/* Roll Result (if any) */}
+      {hasRoll && (
+        <div className="flex items-center gap-4 mb-2">
+          <div className={`text-3xl font-bold font-display ${
+            isHealing ? 'text-green-400' : isDamage ? 'text-red-400' : 'text-white'
+          }`}>
+            {rollResult.total}
+          </div>
+          <div className="flex-1">
+            <div className="text-xs text-gray-400">
+              {Array.isArray(rollResult.rolls) && rollResult.rolls.map((r, i) => {
+                const val = typeof r === 'object' ? r.value : r;
+                return (
+                  <span key={i}>
+                    {i > 0 && ' + '}
+                    [{val}]
+                  </span>
+                );
+              })}
+              {rollResult.modifier !== undefined && rollResult.modifier !== 0 && (
+                <span className="text-gold-dim">
+                  {' '}{rollResult.modifier >= 0 ? '+' : ''}{rollResult.modifier}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              {rollResult.formula}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Effect Description */}
+      <div className="text-sm text-gray-300 bg-dark-bg/50 rounded p-2">
+        {effect}
+      </div>
     </div>
   );
 }

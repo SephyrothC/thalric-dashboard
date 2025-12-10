@@ -71,6 +71,12 @@ io.on('connection', (socket) => {
     console.log('🎲 Test roll received:', data);
     io.emit('dice_roll', data);
   });
+
+  // Broadcast spell cast to all clients
+  socket.on('spell_cast', (data) => {
+    console.log('✨ Spell cast:', data.spell, 'at level', data.level);
+    io.emit('spell_cast', data);
+  });
 });
 
 // Serve frontend for all other routes (SPA)

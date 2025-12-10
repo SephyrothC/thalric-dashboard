@@ -5,7 +5,7 @@
 ![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.2-61dafb.svg)
 
-**A modern, real-time D&D 5e Character Management Dashboard** built specifically for *Thalric Cœur d'Argent* (Aasimar Paladin Level 14).
+**A modern, real-time D&D 5e Character Management Dashboard** built specifically for *Thalric Cœur d'Argent* (Aasimar Paladin Level 15).
 
 This application serves as a digital character sheet and combat companion, featuring a dedicated **Tablet Viewer** for real-time dice rolls and status updates, synchronized instantly via WebSockets.
 

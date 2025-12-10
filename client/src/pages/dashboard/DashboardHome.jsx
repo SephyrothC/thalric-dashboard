@@ -3,6 +3,16 @@ import { useCharacterStore } from '../../store/characterStore';
 import { Link } from 'react-router-dom';
 import ShortRestDialog from '../../components/combat/ShortRestDialog';
 import LongRestDialog from '../../components/combat/LongRestDialog';
+import { 
+  Shield, 
+  Eye, 
+  GraduationCap, 
+  Footprints, 
+  Swords, 
+  Sparkles,
+  Coffee,
+  Moon
+} from 'lucide-react';
 
 export default function DashboardHome() {
   const { character } = useCharacterStore();
@@ -37,25 +47,25 @@ export default function DashboardHome() {
         <StatCard 
           label="Armor Class" 
           value={stats.ac} 
-          icon="🛡️" 
+          Icon={Shield} 
           subtext="Base Defense"
         />
         <StatCard 
           label="Passive Perception" 
           value={stats.passive_perception || 10} 
-          icon="👁️" 
+          Icon={Eye} 
           subtext="Alertness"
         />
         <StatCard 
           label="Proficiency" 
           value={`+${stats.proficiency_bonus}`} 
-          icon="🎓" 
+          Icon={GraduationCap} 
           subtext="Bonus"
         />
         <StatCard 
           label="Speed" 
           value={`${stats.speed} ft`} 
-          icon="🦶" 
+          Icon={Footprints} 
           subtext="Movement"
         />
       </div>
@@ -72,14 +82,14 @@ export default function DashboardHome() {
             <ActionCard 
               title="Combat Mode" 
               description="Enter combat, track initiative, and manage HP."
-              icon="⚔️"
+              Icon={Swords}
               to="/combat"
               color="bg-combat-attack/10 border-combat-attack/20 hover:border-combat-attack"
             />
             <ActionCard 
               title="Spellbook" 
               description="Manage spell slots and view known spells."
-              icon="✨"
+              Icon={Sparkles}
               to="/spells"
               color="bg-combat-magic/10 border-combat-magic/20 hover:border-combat-magic"
             />
@@ -151,10 +161,10 @@ export default function DashboardHome() {
                 className="w-full flex items-center justify-between p-3 bg-dark-bg hover:bg-dark-hover border border-dark-border rounded-lg transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">☕</span>
+                  <Coffee className="w-5 h-5 text-amber-400" />
                   <div className="text-left">
                     <div className="font-bold text-white group-hover:text-gold-primary">Short Rest</div>
-                    <div className="text-xs text-gray-500">Dés de vie & Channel Divinity</div>
+                    <div className="text-xs text-gray-500">Hit Dice & Channel Divinity</div>
                   </div>
                 </div>
               </button>
@@ -164,10 +174,10 @@ export default function DashboardHome() {
                 className="w-full flex items-center justify-between p-3 bg-dark-bg hover:bg-dark-hover border border-dark-border rounded-lg transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🌙</span>
+                  <Moon className="w-5 h-5 text-purple-400" />
                   <div className="text-left">
                     <div className="font-bold text-white group-hover:text-purple-400">Long Rest</div>
-                    <div className="text-xs text-gray-500">Récupération totale</div>
+                    <div className="text-xs text-gray-500">Full Recovery</div>
                   </div>
                 </div>
               </button>
@@ -191,7 +201,7 @@ export default function DashboardHome() {
   );
 }
 
-function StatCard({ label, value, icon, subtext }) {
+function StatCard({ label, value, Icon, subtext }) {
   return (
     <div className="bg-dark-surface p-4 rounded-xl border border-dark-border hover:border-gold-dim/50 transition-colors group">
       <div className="flex items-start justify-between">
@@ -199,21 +209,21 @@ function StatCard({ label, value, icon, subtext }) {
           <p className="text-gray-400 text-sm font-medium">{label}</p>
           <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-gold-primary transition-colors">{value}</h3>
         </div>
-        <span className="text-2xl opacity-50 group-hover:opacity-100 transition-opacity">{icon}</span>
+        <Icon className="w-6 h-6 text-gray-600 group-hover:text-gold-primary transition-colors" />
       </div>
       <p className="text-xs text-gray-500 mt-2">{subtext}</p>
     </div>
   );
 }
 
-function ActionCard({ title, description, icon, to, color }) {
+function ActionCard({ title, description, Icon, to, color }) {
   return (
     <Link 
       to={to} 
       className={`block p-6 rounded-xl border transition-all duration-200 hover:-translate-y-1 ${color}`}
     >
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{icon}</span>
+        <Icon className="w-6 h-6" />
         <h3 className="text-lg font-bold text-white">{title}</h3>
       </div>
       <p className="text-sm text-gray-400">{description}</p>

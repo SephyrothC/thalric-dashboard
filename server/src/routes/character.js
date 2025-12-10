@@ -155,7 +155,7 @@ router.post('/rest/short', (req, res) => {
     }
 
     const data = JSON.parse(character.data);
-    const level = data.character_info.level || 14;
+    const level = data.character_info.level || 15;
     const conMod = Math.floor((data.stats.constitution - 10) / 2); // +2 for Thalric
     const restored = [];
 
@@ -480,6 +480,155 @@ router.post('/notes', (req, res) => {
   } catch (error) {
     console.error('Error saving notes:', error);
     res.status(500).json({ error: 'Failed to save notes' });
+  }
+});
+
+// Add inventory item
+router.post('/inventory', (req, res) => {
+  try {
+    const { item } = req.body;
+
+    if (!item || !item.name) {
+      return res.status(400).json({ error: 'Missing item data' });
+    }
+
+    const db = getDb();
+    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const data = JSON.parse(character.data);
+    
+    if (!data.inventory) {
+      data.inventory = {};
+    }
+
+    // Generate unique ID for the item
+    const itemId = item.id || `item_${Date.now()}`;
+    
+    // Add item to inventory
+    data.inventory[itemId] = {
+      name: item.name,
+      type: item.type || 'Adventuring Gear',
+      rarity: item.rarity || 'common',
+      attunement: item.attunement || false,
+      description: item.description || '',
+      quantity: item.quantity || 1,
+      equipped: false
+    };
+
+    const stmt = db.prepare(`
+      UPDATE character
+      SET data = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+
+    stmt.run(JSON.stringify(data));
+
+    io.emit('inventory_updated', { action: 'add', itemId, item: data.inventory[itemId] });
+
+    res.json({
+      success: true,
+      itemId,
+      item: data.inventory[itemId]
+    });
+  } catch (error) {
+    console.error('Error adding inventory item:', error);
+    res.status(500).json({ error: 'Failed to add item' });
+  }
+});
+
+// Update inventory item quantity
+router.patch('/inventory/:itemId', (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { quantity, delta } = req.body;
+
+    const db = getDb();
+    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const data = JSON.parse(character.data);
+    
+    if (!data.inventory || !data.inventory[itemId]) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    // Update quantity
+    if (delta !== undefined) {
+      data.inventory[itemId].quantity = Math.max(0, (data.inventory[itemId].quantity || 1) + delta);
+    } else if (quantity !== undefined) {
+      data.inventory[itemId].quantity = Math.max(0, quantity);
+    }
+
+    // Remove item if quantity is 0
+    if (data.inventory[itemId].quantity <= 0) {
+      delete data.inventory[itemId];
+    }
+
+    const stmt = db.prepare(`
+      UPDATE character
+      SET data = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+
+    stmt.run(JSON.stringify(data));
+
+    io.emit('inventory_updated', { action: 'update', itemId });
+
+    res.json({
+      success: true,
+      inventory: data.inventory
+    });
+  } catch (error) {
+    console.error('Error updating inventory item:', error);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+// Delete inventory item
+router.delete('/inventory/:itemId', (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    const db = getDb();
+    const character = db.prepare('SELECT data FROM character WHERE id = 1').get();
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const data = JSON.parse(character.data);
+    
+    if (!data.inventory || !data.inventory[itemId]) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const deletedItem = data.inventory[itemId];
+    delete data.inventory[itemId];
+
+    const stmt = db.prepare(`
+      UPDATE character
+      SET data = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+
+    stmt.run(JSON.stringify(data));
+
+    io.emit('inventory_updated', { action: 'delete', itemId });
+
+    res.json({
+      success: true,
+      deletedItem
+    });
+  } catch (error) {
+    console.error('Error deleting inventory item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
   }
 });
 

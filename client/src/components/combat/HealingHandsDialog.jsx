@@ -12,14 +12,21 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
   const uses = healingHands.uses ?? 1;
   const usesMax = healingHands.uses_max ?? 1;
   
-  // Parse dice count from healing property (e.g., "13d4" -> 13)
-  const healingDice = healingHands.healing || '13d4';
-  const diceMatch = healingDice.match(/(\d+)d4/);
-  const diceCount = diceMatch ? parseInt(diceMatch[1]) : (data.stats?.level || 13);
+  // Get healing amount - can be a number (level) or dice string (e.g., "15d4")
+  const healingValue = healingHands.healing;
+  const level = data.character_info?.level || 15;
+  
+  // Determine if we're using fixed healing (number) or dice
+  const isFixedHealing = typeof healingValue === 'number';
+  const healingAmount = isFixedHealing ? healingValue : level;
+  
+  // For dice-based healing (legacy support)
+  const diceMatch = typeof healingValue === 'string' ? healingValue.match(/(\d+)d4/) : null;
+  const diceCount = diceMatch ? parseInt(diceMatch[1]) : level;
   
   const stats = data.stats || {};
   const currentHP = stats.hp_current || 0;
-  const maxHP = stats.hp_max || 117;
+  const maxHP = stats.hp_max || 124;
   const hpMissing = maxHP - currentHP;
 
   // Close modal on Escape key
@@ -46,7 +53,11 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const rollDice = () => {
-    // Roll Xd4 where X = level
+    // For fixed healing, just return the amount
+    if (isFixedHealing) {
+      return { rolls: [healingAmount], total: healingAmount };
+    }
+    // Roll Xd4 where X = level (legacy dice support)
     const rolls = [];
     for (let i = 0; i < diceCount; i++) {
       rolls.push(Math.floor(Math.random() * 4) + 1);
@@ -79,8 +90,11 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
       await useFeature('healing_hands', { amount: actualHealing });
 
       // Show toast with roll details
+      const rollDetails = isFixedHealing 
+        ? `${total} HP`
+        : `${rolls.join('+')} = ${total} HP`;
       toast.heal(
-        `✋ Healing Hands: ${rolls.join('+')} = ${total} HP! (Healed ${actualHealing})`,
+        `✋ Healing Hands: ${rollDetails}! (Healed ${actualHealing})`,
         { duration: 5000 }
       );
 
@@ -97,10 +111,10 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
     onClose();
   };
 
-  // Calculate average and range
-  const minRoll = diceCount;
-  const maxRoll = diceCount * 4;
-  const avgRoll = diceCount * 2.5;
+  // Calculate average and range (for dice-based healing)
+  const minRoll = isFixedHealing ? healingAmount : diceCount;
+  const maxRoll = isFixedHealing ? healingAmount : diceCount * 4;
+  const avgRoll = isFixedHealing ? healingAmount : diceCount * 2.5;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -148,15 +162,24 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* Dice Info */}
+        {/* Healing Info */}
         <div className="mb-4 p-4 bg-dark-bg rounded-lg text-center">
-          <div className="text-sm text-gray-400 mb-1">Healing Roll</div>
+          <div className="text-sm text-gray-400 mb-1">
+            {isFixedHealing ? 'Healing Amount' : 'Healing Roll'}
+          </div>
           <div className="text-3xl font-bold text-gold-primary">
-            {diceCount}d4
+            {isFixedHealing ? `${healingAmount} HP` : `${diceCount}d4`}
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            Range: {minRoll} - {maxRoll} (avg: {avgRoll})
-          </div>
+          {!isFixedHealing && (
+            <div className="text-xs text-gray-500 mt-1">
+              Range: {minRoll} - {maxRoll} (avg: {avgRoll})
+            </div>
+          )}
+          {isFixedHealing && (
+            <div className="text-xs text-gray-500 mt-1">
+              Equal to your level
+            </div>
+          )}
         </div>
 
         {/* HP Missing Info */}
@@ -176,19 +199,23 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
         {/* Roll Result */}
         {rollResult && (
           <div className="mb-4 p-4 bg-green-900/30 border-2 border-green-500 rounded-lg text-center animate-pulse">
-            <div className="text-sm text-green-400 mb-1">Roll Result</div>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              {rollResult.rolls.map((roll, i) => (
-                <span 
-                  key={i} 
-                  className={`w-8 h-8 flex items-center justify-center rounded font-bold ${
-                    roll === 4 ? 'bg-green-500 text-white' : 'bg-dark-bg text-gray-300'
-                  }`}
-                >
-                  {roll}
-                </span>
-              ))}
+            <div className="text-sm text-green-400 mb-1">
+              {isFixedHealing ? 'Healing Applied' : 'Roll Result'}
             </div>
+            {!isFixedHealing && (
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {rollResult.rolls.map((roll, i) => (
+                  <span 
+                    key={i} 
+                    className={`w-8 h-8 flex items-center justify-center rounded font-bold ${
+                      roll === 4 ? 'bg-green-500 text-white' : 'bg-dark-bg text-gray-300'
+                    }`}
+                  >
+                    {roll}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="text-3xl font-bold text-green-400">
               {rollResult.total} HP
             </div>
@@ -201,7 +228,7 @@ export default function HealingHandsDialog({ isOpen, onClose }) {
           disabled={isHealing || uses <= 0 || hpMissing === 0}
           className="w-full px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-dark-bg font-bold text-xl rounded-lg transition-all transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
         >
-          {isHealing ? '✨ Healing...' : rollResult ? '✓ Done!' : `✋ Roll ${diceCount}d4 Healing`}
+          {isHealing ? '✨ Healing...' : rollResult ? '✓ Done!' : isFixedHealing ? `✋ Heal ${healingAmount} HP` : `✋ Roll ${diceCount}d4 Healing`}
         </button>
 
         {rollResult && (

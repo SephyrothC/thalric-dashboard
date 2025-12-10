@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useCharacterStore } from './store/characterStore';
 import { useSocket } from './hooks/useSocket';
-import { useToast, setGlobalToastHandler } from './hooks/useToast';
-import { ToastContainer } from './components/ui/Toast';
+import { Toaster, toast } from 'sonner';
+import DiceRollModal from './components/ui/DiceRollModal';
 
 // Layouts & Pages
 import DashboardLayout from './layouts/DashboardLayout';
@@ -12,17 +12,15 @@ import Combat from './pages/Combat';
 import Spells from './pages/Spells';
 import Features from './pages/Features';
 import Inventory from './pages/Inventory';
-import Viewer from './pages/Viewer';
+
+// Export toast for global usage
+export { toast };
 
 function App() {
   const { character, fetchCharacter, error } = useCharacterStore();
-  const { socket } = useSocket();
-  const toast = useToast();
-
-  // Set global toast handler for easy access
-  useEffect(() => {
-    setGlobalToastHandler(toast);
-  }, [toast]);
+  const { socket, lastDiceRoll } = useSocket();
+  const [showDiceModal, setShowDiceModal] = useState(false);
+  const [currentRoll, setCurrentRoll] = useState(null);
 
   // Listen for real-time updates to refresh character data
   useEffect(() => {
@@ -55,6 +53,14 @@ function App() {
       socket.off('death_save_rolled', handleUpdate);
     };
   }, [socket, fetchCharacter]);
+
+  // Handle dice rolls - show modal
+  useEffect(() => {
+    if (lastDiceRoll) {
+      setCurrentRoll(lastDiceRoll);
+      setShowDiceModal(true);
+    }
+  }, [lastDiceRoll]);
 
   useEffect(() => {
     fetchCharacter();
@@ -91,19 +97,40 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Dashboard Routes wrapped in Layout */}
+        {/* All routes wrapped in responsive layout */}
         <Route path="/" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
         <Route path="/combat" element={<DashboardLayout><Combat /></DashboardLayout>} />
         <Route path="/spells" element={<DashboardLayout><Spells /></DashboardLayout>} />
         <Route path="/features" element={<DashboardLayout><Features /></DashboardLayout>} />
         <Route path="/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
         
-        {/* Standalone Routes */}
-        <Route path="/viewer" element={<Viewer />} />
+        {/* Redirect old viewer to main app */}
+        <Route path="/viewer" element={<DashboardLayout><Combat /></DashboardLayout>} />
       </Routes>
 
-      {/* Global Toast Notifications */}
-      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
+      {/* Sonner Toast Container */}
+      <Toaster 
+        position="top-right"
+        expand={true}
+        richColors
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: '#1e293b',
+            border: '1px solid #334155',
+            color: '#f1f5f9',
+          },
+          className: 'sonner-toast',
+        }}
+      />
+
+      {/* Dice Roll Modal */}
+      {showDiceModal && (
+        <DiceRollModal 
+          roll={currentRoll} 
+          onClose={() => setShowDiceModal(false)} 
+        />
+      )}
     </BrowserRouter>
   );
 }

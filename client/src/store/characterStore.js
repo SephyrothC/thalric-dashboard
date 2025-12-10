@@ -134,7 +134,7 @@ export const useCharacterStore = create((set, get) => ({
     try {
       const body = typeof spellOrLevel === 'object' 
         ? { 
-            spellLevel: spellOrLevel.level, 
+            spellLevel: spellOrLevel.castLevel || spellOrLevel.level, 
             name: spellOrLevel.name, 
             duration: spellOrLevel.duration,
             concentration: spellOrLevel.concentration || spellOrLevel.duration?.toLowerCase().includes('concentration')

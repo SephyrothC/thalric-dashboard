@@ -2,6 +2,21 @@ import { useState, useMemo } from 'react';
 import { useCharacterStore } from '../store/characterStore';
 import SpellDetailsModal from '../components/spells/SpellDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, 
+  Clock, 
+  Ruler, 
+  Shield, 
+  Sparkles, 
+  Eye, 
+  Heart, 
+  Flame, 
+  Theater, 
+  Skull, 
+  FlaskConical, 
+  Scroll,
+  BookOpen
+} from 'lucide-react';
 
 // --- Constants & Helpers ---
 const SCHOOL_COLORS = {
@@ -17,22 +32,22 @@ const SCHOOL_COLORS = {
 };
 
 const SCHOOL_ICONS = {
-  Abjuration: '🛡️',
-  Conjuration: '🦄',
-  Divination: '🔮',
-  Enchantment: '😵',
-  Evocation: '🔥',
-  Illusion: '🎭',
-  Necromancy: '💀',
-  Transmutation: '⚗️',
-  Universal: '✨',
+  Abjuration: Shield,
+  Conjuration: Sparkles,
+  Divination: Eye,
+  Enchantment: Heart,
+  Evocation: Flame,
+  Illusion: Theater,
+  Necromancy: Skull,
+  Transmutation: FlaskConical,
+  Universal: Sparkles,
 };
 
 // --- Components ---
 
 function SpellCard({ spell, onClick, isPrepared, onTogglePrepare }) {
   const schoolStyle = SCHOOL_COLORS[spell.school] || SCHOOL_COLORS.Universal;
-  const schoolIcon = SCHOOL_ICONS[spell.school] || SCHOOL_ICONS.Universal;
+  const SchoolIcon = SCHOOL_ICONS[spell.school] || SCHOOL_ICONS.Universal;
 
   return (
     <motion.div
@@ -53,7 +68,7 @@ function SpellCard({ spell, onClick, isPrepared, onTogglePrepare }) {
         {/* Top Row: Level & School */}
         <div className="flex justify-between items-start mb-3">
           <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 ${schoolStyle}`}>
-            <span>{schoolIcon}</span>
+            <SchoolIcon className="w-3 h-3" />
             {spell.school}
           </span>
           <span className="text-xs font-bold text-gray-500 bg-dark-bg px-2 py-1 rounded">
@@ -69,10 +84,10 @@ function SpellCard({ spell, onClick, isPrepared, onTogglePrepare }) {
         {/* Meta Info */}
         <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
           <span className="flex items-center gap-1" title="Casting Time">
-            ⏱️ {spell.casting_time}
+            <Clock className="w-3 h-3" /> {spell.casting_time}
           </span>
           <span className="flex items-center gap-1" title="Range">
-            📏 {spell.range}
+            <Ruler className="w-3 h-3" /> {spell.range}
           </span>
         </div>
 
@@ -111,7 +126,7 @@ function FilterBar({ filters, setFilters, availableSchools }) {
       {/* Search & Main Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             placeholder="Search spells by name..."
@@ -221,7 +236,7 @@ export default function Spells() {
       const matchesSearch = spell.name.toLowerCase().includes(filters.search.toLowerCase());
       const matchesLevel = filters.level === 'all' || spell.level === parseInt(filters.level);
       const matchesSchool = filters.school === 'all' || spell.school === filters.school;
-      const matchesPrepared = !filters.preparedOnly || spell.prepared || spell.always_prepared; // Assuming 'prepared' property exists or we mock it
+      const matchesPrepared = !filters.preparedOnly || spell.prepared || spell.always_prepared;
       const matchesRitual = !filters.ritualOnly || spell.ritual;
 
       return matchesSearch && matchesLevel && matchesSchool && matchesPrepared && matchesRitual;
@@ -230,9 +245,7 @@ export default function Spells() {
 
   // Mock Prepare Toggle (since store might not have it yet)
   const handleTogglePrepare = (spell) => {
-    // In a real app, this would call an API
     console.log('Toggling prepare for:', spell.name);
-    // For now, we can't persist this without backend support, but the UI is ready
   };
 
   if (!character) return <div className="p-8 text-center text-gray-500">Loading Grimoire...</div>;
@@ -242,7 +255,10 @@ export default function Spells() {
       {/* Header */}
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-4xl font-display font-bold text-gold-primary mb-2">Grimoire</h1>
+          <h1 className="text-4xl font-display font-bold text-gold-primary mb-2 flex items-center gap-3">
+            <BookOpen className="w-8 h-8" />
+            Grimoire
+          </h1>
           <p className="text-gray-400">Manage your arcane knowledge and prepared spells.</p>
         </div>
         
@@ -278,7 +294,7 @@ export default function Spells() {
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
         {filteredSpells.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            <div className="text-6xl mb-4">📜</div>
+            <Scroll className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-xl">No spells found matching your criteria.</p>
           </div>
         ) : (
@@ -288,7 +304,7 @@ export default function Spells() {
                 <SpellCard
                   key={`${spell.name}-${idx}`}
                   spell={spell}
-                  isPrepared={spell.prepared || spell.always_prepared} // Mock state
+                  isPrepared={spell.prepared || spell.always_prepared}
                   onTogglePrepare={handleTogglePrepare}
                   onClick={() => setSelectedSpell(spell)}
                 />

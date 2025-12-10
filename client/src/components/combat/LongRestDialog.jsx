@@ -13,7 +13,7 @@ export default function LongRestDialog({ isOpen, onClose }) {
   const features = data.features || {};
   const spellcasting = data.spellcasting || {};
   const currentHP = stats.hp_current || 0;
-  const maxHP = stats.hp_max || 117;
+  const maxHP = stats.hp_max || 124;
   const hpToRestore = maxHP - currentHP;
 
   // Reset state when dialog opens
@@ -52,7 +52,7 @@ export default function LongRestDialog({ isOpen, onClose }) {
     }
 
     // Hit Dice (half restored)
-    const level = data.character_info?.level || 14;
+    const level = data.character_info?.level || 15;
     const hitDiceRestored = Math.max(1, Math.floor(level / 2));
     items.push({ icon: '💎', name: 'Dés de Vie', detail: `+${hitDiceRestored} dés restaurés`, color: 'text-blue-400' });
 

@@ -1,7 +1,7 @@
 {
   "character_info": {
     "name": "Thalric Cœur d'Argent",
-    "level": 14,
+    "level": 15,
     "class": "Paladin",
     "subclass": "Oath of Devotion",
     "race": "Aasimar",
@@ -17,8 +17,8 @@
     "charisma": 20,
     "proficiency_bonus": 5,
     "ac": 22,
-    "hp_max": 117,
-    "hp_current": 117,
+    "hp_max": 124,
+    "hp_current": 124,
     "temp_hp": 20,
     "speed": 30,
     "passive_perception": 10
@@ -65,13 +65,13 @@
       "1": 4,
       "2": 3,
       "3": 3,
-      "4": 1
+      "4": 2
     },
     "spell_slots_current": {
       "1": 4,
-      "2": 1,
+      "2": 3,
       "3": 3,
-      "4": 1
+      "4": 2
     }
   },
   "spells": {
@@ -97,7 +97,7 @@
         "range": "Touch",
         "duration": "Concentration, up to 10 minutes",
         "components": "V, S, M",
-        "description": "Protects against aberrations, celestials, elementals, fey, fiends, and undead",
+        "description": "Une créature volontaire est protégée contre les aberrations, célestes, élémentaires, fées, fiélons et morts-vivants. Ces créatures ont un désavantage sur les jets d'attaque contre la cible, et la cible ne peut être ni charmée, ni effrayée, ni possédée par elles.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -109,7 +109,7 @@
         "range": "30 feet",
         "duration": "1 minute",
         "components": "V, S, M",
-        "description": "Ward creature against attack, attackers must make Wisdom save",
+        "description": "Vous protégez une créature à portée contre les attaques. Toute créature qui cible la créature protégée avec une attaque ou un sort nuisible doit d'abord réussir un jet de sauvegarde de Sagesse (DC 18) ou perdre son attaque.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -121,7 +121,7 @@
         "range": "30 feet",
         "duration": "Concentration, up to 1 minute",
         "components": "V, S, M",
-        "description": "3 creatures add 1d4 to attack rolls and saving throws",
+        "description": "Vous bénissez jusqu'à trois créatures de votre choix à portée. Chaque fois qu'une cible fait un jet d'attaque ou un jet de sauvegarde, elle peut ajouter 1d4 au résultat.",
         "prepared": true
       },
       "cure_wounds": {
@@ -132,7 +132,7 @@
         "range": "Touch",
         "duration": "Instantaneous",
         "components": "V, S",
-        "description": "Heal 1d8 + CHA modifier HP",
+        "description": "Une créature que vous touchez récupère 1d8 + 5 (CHA) points de vie. +1d8 par niveau de sort supérieur.",
         "prepared": true
       },
       "shield_of_faith": {
@@ -143,7 +143,7 @@
         "range": "60 feet",
         "duration": "Concentration, up to 10 minutes",
         "components": "V, S, M",
-        "description": "+2 AC to target",
+        "description": "Un champ scintillant apparaît et entoure une créature de votre choix à portée, lui accordant un bonus de +2 à la CA pour la durée.",
         "prepared": true
       },
       "heroism": {
@@ -156,6 +156,17 @@
         "components": "V, S",
         "description": "Target is immune to frightened and gains 5 temporary HP at the start of each of its turns",
         "prepared": true
+      },
+      "command": {
+        "name": "Command",
+        "level": 1,
+        "school": "enchantment",
+        "casting_time": "1 action",
+        "range": "60 feet",
+        "duration": "1 round",
+        "components": "V",
+        "description": "Speak a one-word command to a creature. Target must succeed on a Wisdom save or follow the command on its next turn (e.g., Approach, Drop, Flee, Grovel, Halt).",
+        "prepared": true
       }
     },
     "level_2": {
@@ -167,7 +178,7 @@
         "range": "Touch",
         "duration": "Instantaneous",
         "components": "V, S",
-        "description": "End one disease or condition (blinded, deafened, paralyzed, poisoned)",
+        "description": "Vous touchez une créature et pouvez mettre fin à une maladie ou à l'une des conditions suivantes : aveuglé, assourdi, paralysé ou empoisonné.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -179,7 +190,7 @@
         "range": "60 feet",
         "duration": "10 minutes",
         "components": "V, S",
-        "description": "Creatures in 15-foot radius cannot lie",
+        "description": "Vous créez une zone magique de 4,50 mètres de rayon. Toute créature qui y entre doit réussir un jet de sauvegarde de Charisme (DC 18) ou devenir incapable de dire un mensonge délibéré tant qu'elle reste dans la zone.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -191,7 +202,7 @@
         "range": "30 feet",
         "duration": "8 hours",
         "components": "V, S, M",
-        "description": "Up to 3 creatures gain 5 temporary HP and increase HP maximum",
+        "description": "Choisissez jusqu'à trois créatures à portée. Le maximum de PV et les PV actuels de chaque cible augmentent de 5 pour la durée. +5 PV supplémentaires par niveau de sort supérieur.",
         "prepared": true
       },
       "find_steed": {
@@ -226,7 +237,7 @@
         "range": "120 feet",
         "duration": "Instantaneous",
         "components": "V, S",
-        "description": "End spells of 3rd level or lower, roll for higher level spells",
+        "description": "Vous choisissez une créature, un objet ou un effet magique à portée. Tout sort de niveau 3 ou inférieur sur la cible prend fin. Pour les niveaux supérieurs, faites un jet de caractéristique d'incantation (DC = 10 + niveau du sort).",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -238,7 +249,7 @@
         "range": "30 feet",
         "duration": "Concentration, up to 1 minute",
         "components": "V, S",
-        "description": "Creatures have advantage on Wisdom saves and death saves, regain max HP from healing",
+        "description": "Vous choisissez un nombre quelconque de créatures à portée. Pour la durée, chaque cible a l'avantage aux jets de sauvegarde de Sagesse et contre la mort, et récupère le maximum de points de vie possible lors de tout soin.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -249,8 +260,8 @@
         "casting_time": "1 action",
         "range": "Touch",
         "duration": "Instantaneous",
-        "components": "V, S, M (diamonds worth 300 gp)",
-        "description": "Return creature to life that died within last minute",
+        "components": "V, S, M (diamants valant 300 po, consommés)",
+        "description": "Vous touchez une créature morte depuis moins d'une minute. Cette créature revient à la vie avec 1 point de vie. Ce sort ne peut pas ramener à la vie une créature morte de vieillesse.",
         "prepared": true
       },
       "aura_of_vitality": {
@@ -261,7 +272,7 @@
         "range": "Self (30-foot radius)",
         "duration": "Concentration, up to 1 minute",
         "components": "V",
-        "description": "Bonus action to heal 2d6 HP to creature in aura",
+        "description": "Une énergie curative irradie de vous dans une aura de 9 mètres. Vous pouvez utiliser une action bonus pour faire récupérer 2d6 points de vie à une créature dans l'aura.",
         "prepared": true
       },
       "magic_circle": {
@@ -297,6 +308,17 @@
         "components": "V",
         "description": "Allies within 30 feet deal +1d4 radiant damage on weapon attacks",
         "prepared": true
+      },
+      "blinding_smite": {
+        "name": "Blinding Smite",
+        "level": 3,
+        "school": "evocation",
+        "casting_time": "1 bonus action",
+        "range": "Self",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V",
+        "description": "Next weapon hit deals +3d8 radiant damage. Target must succeed on Constitution save or be blinded until spell ends.",
+        "prepared": true
       }
     },
     "level_4": {
@@ -308,7 +330,7 @@
         "range": "Self (30-foot radius)",
         "duration": "Concentration, up to 10 minutes",
         "components": "V",
-        "description": "Resistance to necrotic damage, allies at 0 HP regain 1 HP at start of turn",
+        "description": "Une énergie préservatrice de vie irradie de vous dans une aura de 9 mètres. Chaque créature non-hostile dans l'aura a une résistance aux dégâts nécrotiques et son maximum de PV ne peut être réduit. Une créature vivante à 0 PV récupère 1 PV au début de son tour dans l'aura.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -320,7 +342,7 @@
         "range": "30 feet",
         "duration": "8 hours",
         "components": "V",
-        "description": "Spectral guardian deals 20 radiant damage to enemies that approach",
+        "description": "Un gardien spectral apparaît et plane dans un espace inocuppé. Toute créature hostile qui se déplace à moins de 3 mètres du gardien pour la première fois dans un tour doit réussir un jet de sauvegarde de Dextérité ou subir 20 dégâts radiants (la moitié en cas de réussite). Le gardien disparaît après avoir infligé 60 dégâts au total.",
         "source": "Oath spell",
         "always_prepared": true
       },
@@ -332,7 +354,41 @@
         "range": "Touch",
         "duration": "8 hours",
         "components": "V, S",
-        "description": "First time target would drop to 0 HP, they instead drop to 1 HP. Spell ends after preventing death once.",
+        "description": "Vous touchez une créature et lui accordez une protection contre la mort. La première fois que la cible tomberait à 0 PV suite à des dégâts, elle tombe à 1 PV à la place et le sort prend fin.",
+        "prepared": true
+      },
+      "banishment": {
+        "name": "Banishment",
+        "level": 4,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "60 feet",
+        "duration": "Concentration, up to 1 minute",
+        "components": "V, S, M",
+        "description": "Target must succeed on Charisma save or be banished to a harmless demiplane. If target is native to a different plane, it returns to its home plane.",
+        "prepared": true
+      },
+      "freedom_of_movement": {
+        "name": "Freedom of Movement",
+        "level": 4,
+        "school": "abjuration",
+        "casting_time": "1 action",
+        "range": "Touch",
+        "duration": "1 hour",
+        "components": "V, S, M",
+        "description": "Target's movement is unaffected by difficult terrain, and spells/effects can't reduce speed or cause paralysis/restraint. Can escape nonmagical restraints by spending 5 feet of movement.",
+        "prepared": true
+      },
+      "find_greater_steed": {
+        "name": "Find Greater Steed",
+        "level": 4,
+        "school": "conjuration",
+        "casting_time": "10 minutes",
+        "range": "30 feet",
+        "duration": "Instantaneous",
+        "components": "V, S",
+        "description": "Summon a powerful spirit as a loyal mount: Griffon, Pegasus, Peryton, Dire Wolf, Rhinoceros, or Saber-toothed Tiger. The mount is telepathically linked to you.",
+        "source": "Xanathar's Guide",
         "prepared": true
       }
     }
@@ -356,8 +412,8 @@
     },
     "lay_on_hands": {
       "name": "Lay on Hands",
-      "pool": 70,
-      "pool_max": 70,
+      "pool": 75,
+      "pool_max": 75,
       "recharge": "long_rest",
       "description": "Heal HP or cure disease/poison (5 HP per disease/poison)"
     },
@@ -373,8 +429,8 @@
       "uses": 1,
       "uses_max": 1,
       "recharge": "long_rest",
-      "healing": "7d4",
-      "description": "Aasimar racial healing ability"
+      "healing": "15d4",
+      "description": "Aasimar racial healing ability. Roll 15d4 to heal."
     },
     "radiant_soul": {
       "name": "Radiant Soul",
@@ -399,6 +455,10 @@
       "name": "Aura of Devotion",
       "range": 10,
       "description": "You and allies within 10ft can't be charmed"
+    },
+    "purity_of_spirit": {
+      "name": "Purity of Spirit",
+      "description": "You are always under the effects of Protection from Evil and Good. Aberrations, Celestials, Fey, Fiends, and Undead have permanent disadvantage on attack rolls against you."
     },
     "divine_smite": {
       "name": "Divine Smite",
@@ -442,19 +502,19 @@
       "name": "Crystal Longsword",
       "type": "Martial Weapon (Longsword)",
       "rarity": "rare",
-      "attunement": false,
-      "description": "Magical longsword dealing 1d8+3 slashing + 1d8 radiant damage. Has 3 charges (regains 1d3 at dawn). Expend 1 charge to regain HP equal to radiant damage dealt. Equipped.",
+      "attunement": true,
+      "description": "Magical longsword dealing 1d8+3 slashing + 1d8 radiant damage. Has 3 charges (regains 1d3 at dawn). Expend 1 charge to regain HP equal to radiant damage dealt. Sheds bright light. Equipped and attuned.",
       "quantity": 1,
       "equipped": true,
       "charges": 3,
       "charges_max": 3
     },
-    "ring_of_cold_resistance": {
-      "name": "Ring of Cold Resistance",
-      "type": "Ring",
+    "cloak_of_displacement": {
+      "name": "Cloak of Displacement",
+      "type": "Wondrous Item (Cloak)",
       "rarity": "rare",
       "attunement": true,
-      "description": "Grants resistance to cold damage. Worn and attuned.",
+      "description": "All attack rolls against you have disadvantage. If you take damage, this property ceases to function until the start of your next turn. Worn and attuned.",
       "quantity": 1,
       "equipped": true
     },
