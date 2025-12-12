@@ -106,6 +106,66 @@ module.exports = (io) => {
     }
   });
 
+  // Broadcast a pre-calculated dice roll (for advantage/disadvantage rolls calculated client-side)
+  router.post('/broadcast', (req, res) => {
+    try {
+      const { formula, rollType, total, rolls, modifier, details } = req.body;
+
+      if (total === undefined) {
+        return res.status(400).json({ error: 'Missing total' });
+      }
+
+      const timestamp = new Date().toISOString();
+
+      // Save to database
+      const db = getDb();
+      const stmt = db.prepare(`
+        INSERT INTO dice_rolls (character_id, formula, result, roll_type, details, is_critical, is_fumble, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      // Check for crits (if any non-discarded roll is 20 or 1)
+      const activeRolls = Array.isArray(rolls) 
+        ? rolls.filter(r => typeof r === 'object' ? !r.discarded : true).map(r => typeof r === 'object' ? r.value : r)
+        : [];
+      const isCritical = activeRolls.includes(20);
+      const isFumble = activeRolls.includes(1) && !isCritical;
+
+      stmt.run(
+        1,
+        formula || 'custom',
+        total,
+        rollType || 'Dice Roll',
+        details || null,
+        isCritical ? 1 : 0,
+        isFumble ? 1 : 0,
+        timestamp
+      );
+
+      // Broadcast to all connected clients
+      const broadcastData = {
+        result: total,
+        total: total,
+        formula: formula || 'custom',
+        rollType: rollType || 'Dice Roll',
+        details: details,
+        rolls: rolls || [],
+        modifier: modifier || 0,
+        is_critical: isCritical,
+        is_fumble: isFumble,
+        timestamp: new Date().toLocaleTimeString(),
+        animation_class: isCritical ? 'critical-success' : isFumble ? 'critical-failure' : 'normal-roll'
+      };
+
+      io.emit('dice_roll', broadcastData);
+
+      res.json({ success: true, total, timestamp });
+    } catch (error) {
+      console.error('Error broadcasting dice roll:', error);
+      res.status(500).json({ error: 'Failed to broadcast dice roll' });
+    }
+  });
+
   // Roll attack
   router.post('/attack', (req, res) => {
     try {

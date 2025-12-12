@@ -269,6 +269,10 @@ module.exports = (io) => {
     const db = getDb();
 
     try {
+      // Get current concentration spell before clearing it
+      const current = db.prepare('SELECT concentration_spell FROM character WHERE id = 1').get();
+      const spellName = current?.concentration_spell;
+      
       const updateStmt = db.prepare(`
         UPDATE character
         SET concentration_spell = NULL,
@@ -279,9 +283,9 @@ module.exports = (io) => {
       `);
       updateStmt.run();
 
-      io.emit('concentration_ended');
+      io.emit('concentration_ended', { spell: spellName, reason: 'manual' });
 
-      res.json({ success: true });
+      res.json({ success: true, spell: spellName });
     } catch (error) {
       console.error('Failed to end concentration:', error);
       res.status(500).json({ error: 'Failed to end concentration' });

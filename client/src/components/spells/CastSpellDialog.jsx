@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCharacterStore } from '../../store/characterStore';
+import { useCompanionStore, SELF_ONLY_SPELLS } from '../../store/companionStore';
 import { useSocket } from '../../hooks/useSocket';
 import { 
   Sparkles, 
@@ -8,8 +9,10 @@ import {
   ChevronUp,
   Zap,
   Loader2,
-  Brain
+  Brain,
+  Bird
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Calcul des effets à niveau supérieur pour les sorts connus
 const SPELL_SCALING = {
@@ -120,7 +123,8 @@ export default function CastSpellDialog({
   onCast,
   maxSpellLevel = 4 
 }) {
-  const { character } = useCharacterStore();
+  const { character, applyAid } = useCharacterStore();
+  const { addBuff } = useCompanionStore();
   const { socket } = useSocket();
   const [selectedLevel, setSelectedLevel] = useState(spell?.level || 1);
   const [casting, setCasting] = useState(false);
@@ -226,12 +230,29 @@ export default function CastSpellDialog({
         }
       }
       
+      // Vérifier si c'est un sort self-only qui affecte Quicksilver
+      const affectsMount = SELF_ONLY_SPELLS.includes(spell.name);
+      
+      // Ajouter le buff à Quicksilver si c'est un sort partagé
+      if (affectsMount) {
+        addBuff(spell.name, selectedLevel);
+      }
+      
+      // Appliquer l'effet d'Aid sur Thalric aussi
+      if (spell.name === 'Aid') {
+        const hpBonus = await applyAid(selectedLevel);
+        if (hpBonus > 0) {
+          toast.success(`🛡️ Aid: +${hpBonus} PV max pour Thalric`);
+        }
+      }
+      
       // Émettre l'événement spell_cast pour le Combat Log
       socket?.emit('spell_cast', {
         spell: spell.name,
         level: selectedLevel,
         baseLevel: spell.level,
         effect: effect?.description || spell.description,
+        affectsQuicksilver: affectsMount,
         rollResult: rollResult ? {
           total: rollResult.total,
           rolls: rollResult.rolls,
@@ -240,6 +261,15 @@ export default function CastSpellDialog({
           type: effect.type
         } : null
       });
+      
+      // Notification pour Quicksilver si c'est un sort self-only
+      if (affectsMount) {
+        toast.success(`Quicksilver bénéficie aussi de ${spell.name}!`, {
+          icon: <Bird className="w-4 h-4 text-amber-400" />,
+          description: 'Find Greater Steed - Sort partagé',
+          duration: 4000
+        });
+      }
       
       // Cast le sort (consume le slot)
       await onCast({
@@ -259,6 +289,7 @@ export default function CastSpellDialog({
 
   const isConcentration = spell.duration?.toLowerCase().includes('concentration');
   const currentEffect = getEffectAtLevel(selectedLevel);
+  const affectsQuicksilver = SELF_ONLY_SPELLS.includes(spell.name);
 
   return (
     <AnimatePresence>
@@ -358,6 +389,27 @@ export default function CastSpellDialog({
                   Incantation à niveau supérieur (+{selectedLevel - spell.level})
                 </span>
               </div>
+            )}
+
+            {/* Find Greater Steed - Sort partagé avec Quicksilver */}
+            {affectsQuicksilver && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-900/30 border border-amber-500/50 rounded-lg p-3 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <Bird className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <span className="text-sm font-bold text-amber-300 block">
+                    Find Greater Steed
+                  </span>
+                  <span className="text-xs text-amber-200/80">
+                    Quicksilver bénéficiera aussi de ce sort!
+                  </span>
+                </div>
+              </motion.div>
             )}
           </div>
 

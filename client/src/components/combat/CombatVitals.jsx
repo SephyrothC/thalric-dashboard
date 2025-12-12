@@ -147,26 +147,30 @@ export default function CombatVitals() {
     const bestRoll = Math.max(roll1, roll2);
     const total = bestRoll + dexMod;
     
-    // Show both rolls in the toast
-    const rollDetails = `Initiative (Advantage): [${roll1}, ${roll2}] → ${bestRoll} + ${dexMod >= 0 ? '+' : ''}${dexMod} = ${total}`;
+    // Format description based on DEX mod
+    const dexText = dexMod === 0 ? '' : ` + DEX ${dexMod >= 0 ? '+' : ''}${dexMod}`;
     
     toast.success(`🎯 Initiative: ${total}`, {
-      description: `Rolls: ${roll1} & ${roll2} (best: ${bestRoll}) + DEX ${dexMod >= 0 ? '+' : ''}${dexMod}`,
+      description: `Rolls: ${roll1} & ${roll2} (best: ${bestRoll})${dexText}`,
       duration: 5000
     });
     
-    // Still emit via socket for the viewer
+    // Broadcast via socket directly (don't let server re-roll)
     try {
-      await fetch(`${window.location.origin}/api/dice/roll`, {
+      // Use the broadcast endpoint with pre-calculated result
+      await fetch(`${window.location.origin}/api/dice/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          formula: `2d20kh1+${dexMod}`, 
-          rollType: 'Initiative',
-          details: rollDetails,
-          result: total,
-          rolls: [roll1, roll2],
-          advantage: true
+          formula: dexMod === 0 ? '2d20kh1' : `2d20kh1${dexMod >= 0 ? '+' : ''}${dexMod}`, 
+          rollType: 'Initiative (Advantage)',
+          total: total,
+          rolls: [
+            { value: roll1, discarded: roll1 < roll2 },
+            { value: roll2, discarded: roll2 < roll1 }
+          ],
+          modifier: dexMod,
+          details: `[${roll1}, ${roll2}] → meilleur: ${bestRoll}`
         })
       });
     } catch (error) {

@@ -16,5 +16,19 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks - bibliothèques tierces
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          'vendor-utils': ['zustand', 'sonner', 'socket.io-client'],
+        }
+      }
+    },
+    // Augmenter légèrement la limite pour éviter le warning
+    chunkSizeWarningLimit: 300
   }
 })

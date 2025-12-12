@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
+import { useCharacterStore } from '../../store/characterStore';
+import { useCompanionStore } from '../../store/companionStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   EyeOff, 
   Heart, 
@@ -17,7 +20,8 @@ import {
   Sparkles as SparklesIcon, 
   X,
   Plus,
-  Zap
+  Zap,
+  Bird
 } from 'lucide-react';
 
 const CONDITIONS_LIST = [
@@ -43,6 +47,15 @@ export default function ConditionsTracker() {
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(1);
   const { socket } = useSocket();
+  
+  // Get Aid bonus from character store and companion buffs
+  const { aidBonus, removeAid, resetHpToBase, character } = useCharacterStore();
+  const { activeBuffs, removeBuff, clearAllBuffs } = useCompanionStore();
+  
+  // Check if HP max is higher than expected (stuck Aid bonus)
+  const currentMaxHp = character?.data?.stats?.hp_max || 124;
+  const expectedMaxHp = 124 + aidBonus;
+  const hasStuckBonus = currentMaxHp > expectedMaxHp;
 
   useEffect(() => {
     loadConditions();
@@ -50,12 +63,25 @@ export default function ConditionsTracker() {
     socket.on('condition_added', loadConditions);
     socket.on('condition_removed', loadConditions);
     socket.on('turn_advanced', loadConditions);
+    
+    // Listen for concentration ending to remove shared buffs from Quicksilver
+    socket.on('concentration_ended', (data) => {
+      if (data?.spell) {
+        const buffExists = activeBuffs.find(b => b.name === data.spell);
+        if (buffExists) {
+          removeBuff(data.spell);
+          toast.info(`✨ ${data.spell} terminé pour Quicksilver`);
+        }
+      }
+    });
+    
     return () => {
       socket.off('condition_added');
       socket.off('condition_removed');
       socket.off('turn_advanced');
+      socket.off('concentration_ended');
     };
-  }, [socket]);
+  }, [socket, activeBuffs, removeBuff]);
 
   const loadConditions = async () => {
     try {
@@ -85,6 +111,24 @@ export default function ConditionsTracker() {
     }
   };
 
+  // Handle removing spell buffs (like Aid)
+  const handleRemoveSpellBuff = async (buffName) => {
+    if (buffName === 'Aid') {
+      // Remove Aid from both Thalric and Quicksilver
+      const removedBonus = await removeAid();
+      removeBuff('Aid');
+      if (removedBonus > 0) {
+        toast.success(`🛡️ Aid terminé`, {
+          description: `-${removedBonus} HP max pour Thalric et Quicksilver`
+        });
+      }
+    } else {
+      // Just remove from Quicksilver
+      removeBuff(buffName);
+      toast.success(`✨ ${buffName} terminé pour Quicksilver`);
+    }
+  };
+
   // Merge standard and custom conditions for display
   const allActiveConditions = conditions.filter(c => c.active).map(c => {
     const standard = CONDITIONS_LIST.find(s => s.name === c.name);
@@ -98,6 +142,86 @@ export default function ConditionsTracker() {
 
   return (
     <div className="space-y-2">
+      {/* Warning: Stuck HP bonus */}
+      {hasStuckBonus && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between gap-2 px-2 py-1.5 bg-amber-500/10 border border-amber-500 rounded text-xs"
+        >
+          <span className="text-amber-400">
+            ⚠️ HP max bloqués à {currentMaxHp} (base: 124)
+          </span>
+          <button
+            onClick={async () => {
+              await resetHpToBase();
+              clearAllBuffs();
+              toast.success('HP réinitialisés à 124');
+            }}
+            className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded font-bold transition-colors"
+          >
+            Reset
+          </button>
+        </motion.div>
+      )}
+      
+      {/* Active Spell Buffs (Aid, etc.) */}
+      {(aidBonus > 0 || activeBuffs.length > 0) && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          <AnimatePresence mode="popLayout">
+            {/* Aid buff for Thalric */}
+            {aidBonus > 0 && (
+              <motion.div
+                key="aid-thalric"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-1.5 px-2 py-1 bg-dark-bg border border-red-500 rounded text-xs font-bold text-white"
+                title="Cliquer pour terminer le sort"
+              >
+                <Heart className="w-3 h-3 text-red-500" />
+                <span>Aid</span>
+                <span className="text-[10px] text-red-400 bg-dark-surface px-1 rounded">
+                  +{aidBonus} HP
+                </span>
+                <button
+                  className="ml-1 text-gray-500 hover:text-red-400 transition-colors"
+                  onClick={() => handleRemoveSpellBuff('Aid')}
+                  title="Terminer le sort"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
+            )}
+            
+            {/* Other Quicksilver buffs (that don't have Thalric equivalent) */}
+            {activeBuffs.filter(b => b.name !== 'Aid').map(buff => (
+              <motion.div
+                key={`qs-${buff.name}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-1.5 px-2 py-1 bg-dark-bg border border-blue-500 rounded text-xs font-bold text-white"
+                title={`${buff.effect.description} (Quicksilver)`}
+              >
+                <Bird className="w-3 h-3 text-blue-400" />
+                <span>{buff.name}</span>
+                <span className="text-[10px] text-blue-400 bg-dark-surface px-1 rounded">
+                  QS
+                </span>
+                <button
+                  className="ml-1 text-gray-500 hover:text-red-400 transition-colors"
+                  onClick={() => handleRemoveSpellBuff(buff.name)}
+                  title="Terminer le sort"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+      
       {/* Active Conditions List */}
       <div className="flex flex-wrap gap-2">
         <AnimatePresence mode="popLayout">
@@ -127,7 +251,7 @@ export default function ConditionsTracker() {
             </motion.div>
           ))}
         </AnimatePresence>
-        {allActiveConditions.length === 0 && (
+        {allActiveConditions.length === 0 && aidBonus === 0 && activeBuffs.length === 0 && (
           <div className="text-[10px] text-gray-500 italic py-0.5">No active conditions</div>
         )}
       </div>

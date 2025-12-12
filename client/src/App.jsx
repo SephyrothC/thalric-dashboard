@@ -1,17 +1,30 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useCharacterStore } from './store/characterStore';
 import { useSocket } from './hooks/useSocket';
 import { Toaster, toast } from 'sonner';
 import DiceRollModal from './components/ui/DiceRollModal';
 
-// Layouts & Pages
+// Layout (toujours chargé)
 import DashboardLayout from './layouts/DashboardLayout';
-import DashboardHome from './pages/dashboard/DashboardHome';
-import Combat from './pages/Combat';
-import Spells from './pages/Spells';
-import Features from './pages/Features';
-import Inventory from './pages/Inventory';
+
+// Pages en lazy loading - chargées à la demande
+const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'));
+const Combat = lazy(() => import('./pages/Combat'));
+const Spells = lazy(() => import('./pages/Spells'));
+const Features = lazy(() => import('./pages/Features'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Companion = lazy(() => import('./pages/Companion'));
+
+// Composant de chargement pour les pages
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-full min-h-[50vh]">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-8 h-8 border-3 border-gold-primary border-t-transparent rounded-full animate-spin"></div>
+      <span className="text-gray-400 text-sm">Chargement...</span>
+    </div>
+  </div>
+);
 
 // Export toast for global usage
 export { toast };
@@ -96,17 +109,20 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* All routes wrapped in responsive layout */}
-        <Route path="/" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
-        <Route path="/combat" element={<DashboardLayout><Combat /></DashboardLayout>} />
-        <Route path="/spells" element={<DashboardLayout><Spells /></DashboardLayout>} />
-        <Route path="/features" element={<DashboardLayout><Features /></DashboardLayout>} />
-        <Route path="/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
-        
-        {/* Redirect old viewer to main app */}
-        <Route path="/viewer" element={<DashboardLayout><Combat /></DashboardLayout>} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* All routes wrapped in responsive layout */}
+          <Route path="/" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
+          <Route path="/combat" element={<DashboardLayout><Combat /></DashboardLayout>} />
+          <Route path="/spells" element={<DashboardLayout><Spells /></DashboardLayout>} />
+          <Route path="/features" element={<DashboardLayout><Features /></DashboardLayout>} />
+          <Route path="/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
+          <Route path="/companion" element={<DashboardLayout><Companion /></DashboardLayout>} />
+          
+          {/* Redirect old viewer to main app */}
+          <Route path="/viewer" element={<DashboardLayout><Combat /></DashboardLayout>} />
+        </Routes>
+      </Suspense>
 
       {/* Sonner Toast Container */}
       <Toaster 

@@ -14,7 +14,8 @@ import {
   Wifi, 
   WifiOff,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Bird
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -32,6 +33,7 @@ export default function DashboardLayout({ children }) {
     { path: '/spells', label: 'Spellbook', icon: BookOpen },
     { path: '/features', label: 'Abilities', icon: Zap },
     { path: '/inventory', label: 'Inventory', icon: Backpack },
+    { path: '/companion', label: 'Companion', icon: Bird },
   ];
 
   const handleQuickHeal = () => {

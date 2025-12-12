@@ -166,7 +166,7 @@ function LogEntry({ log }) {
 
 function SpellLogEntry({ log }) {
   const { data } = log;
-  const { spell, level, baseLevel, effect, rollResult } = data;
+  const { spell, level, baseLevel, effect, rollResult, affectsQuicksilver } = data;
   
   const isUpcast = level > baseLevel;
   const hasRoll = rollResult && rollResult.total !== undefined;
@@ -253,6 +253,21 @@ function SpellLogEntry({ log }) {
       <div className="text-sm text-gray-300 bg-dark-bg/50 rounded p-2">
         {effect}
       </div>
+
+      {/* Quicksilver indicator - Find Greater Steed */}
+      {affectsQuicksilver && (
+        <div className="mt-2 flex items-center gap-2 bg-amber-900/30 border border-amber-500/40 rounded-lg px-3 py-1.5">
+          <span className="text-lg">🦅</span>
+          <div className="flex-1">
+            <span className="text-xs font-bold text-amber-300">
+              Quicksilver aussi!
+            </span>
+            <span className="text-xs text-amber-200/70 ml-2">
+              (Find Greater Steed)
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
